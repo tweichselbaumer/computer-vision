@@ -14,8 +14,11 @@ file(GLOB_RECURSE cv_SOURCE_FILES "${PROJECT_SOURCE_DIR}/src"
     "*.h"
     "*.cpp"
 )
+add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/MathFunctions)
 
-add_subdirectory (thirdParty/MathFunctions) 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(computer-vision ${cv_SOURCE_FILES})
 target_link_libraries (computer-vision MathFunctions)
+target_link_libraries(computer-vision ${OpenCV_LIBS})
