@@ -6,18 +6,18 @@ using namespace cv;
 
 int main()
 {
-	int numBoards = 0;
-	int numCornersHor;
-	int numCornersVer;
+	int numBoards = 10;
+	int numCornersHor = 10;
+	int numCornersVer = 10;
 
-	printf("Enter number of corners along width: ");
+	/*printf("Enter number of corners along width: ");
 	scanf("%d", &numCornersHor);
 
 	printf("Enter number of corners along height: ");
 	scanf("%d", &numCornersVer);
 
 	printf("Enter number of boards: ");
-	scanf("%d", &numBoards);
+	scanf("%d", &numBoards);*/
 
 	int numSquares = numCornersHor * numCornersVer;
 	Size board_sz = Size(numCornersHor, numCornersVer);
@@ -34,12 +34,55 @@ int main()
 	Mat gray_image;
 	capture >> image;
 
+	bool png = false;
+
+
+	std::vector<int> compression_params;
+
+	if (png) 
+	{
+		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+		compression_params.push_back(2);
+	}
+	else
+	{
+		compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+		compression_params.push_back(90);
+	}
+
+	//imencode(".png", image, buf, compression_params);
+
+	while (true) {
+		cvtColor(image, gray_image, CV_BGR2GRAY);
+		std::vector<uchar> buf;
+		int64 start = cv::getTickCount();
+		imshow("win1", image);
+		if (png)
+		{
+			imencode(".png", gray_image, buf, compression_params);
+			//imwrite("test.png", gray_image, compression_params);
+		}
+		else 
+		{
+			imencode(".jpg", gray_image, buf, compression_params);
+			//imwrite("test.jpg", gray_image, compression_params);
+		}
+		imshow("win2", imdecode(buf,0));
+		capture >> image;
+		int key = waitKey(1);
+
+		if (key == 27)
+			return 0;
+
+		double fps = cv::getTickFrequency() / (cv::getTickCount() - start);
+		std::cout << "FPS : " << fps << "  Compress Size(KB): " << (double)buf.size() / 1024 << "  Orginal Size(KB): " << (double)(image.size().width* image.size().height) / 1024 << "  MBit/s:" << (double)buf.size() / 1024 /1024*fps << std::endl;
+	}
 
 	std::vector<Point3f> obj;
-	for (int j = 0; j<numSquares; j++)
+	for (int j = 0; j < numSquares; j++)
 		obj.push_back(Point3f(j / numCornersHor, j%numCornersHor, 0.0f));
 
-	while (successes<numBoards)
+	while (successes < numBoards)
 	{
 		cvtColor(image, gray_image, CV_BGR2GRAY);
 
@@ -52,7 +95,7 @@ int main()
 		}
 
 		imshow("win1", image);
-		imshow("win2",gray_image);
+		imshow("win2", gray_image);
 
 		capture >> image;
 		int key = waitKey(1);
