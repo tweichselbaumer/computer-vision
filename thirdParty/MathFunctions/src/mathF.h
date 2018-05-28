@@ -1,1 +1,0 @@
-int mathF(int a);

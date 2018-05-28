@@ -2,33 +2,47 @@
 #include <opencv\highgui.h>
 #include <opencv2\opencv_modules.hpp>
 
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <utility>
+
+#include <boost/asio.hpp>
+#include <boost/timer/timer.hpp>
+#include <boost/thread.hpp>
+#include "socket/tcp_server.h"
+
+#include "AVLTree.h"
+#include "Platform.h"
+
+using boost::asio::ip::tcp;
+
+using namespace boost::timer;
+using namespace std;
 using namespace cv;
 
-int main()
+boost::asio::io_service io_service;
+
+LinkUpEventLabel* pEvent;
+LinkUpNode* pLinkUpNode;
+
+bool running = true;
+
+void doWork()
 {
-	int numBoards = 10;
-	int numCornersHor = 10;
-	int numCornersVer = 10;
+	io_service.run();
+}
 
-	/*printf("Enter number of corners along width: ");
-	scanf("%d", &numCornersHor);
+void doWork2()
+{
+	VideoCapture capture = VideoCapture(1);
 
-	printf("Enter number of corners along height: ");
-	scanf("%d", &numCornersVer);
-
-	printf("Enter number of boards: ");
-	scanf("%d", &numBoards);*/
-
-	int numSquares = numCornersHor * numCornersVer;
-	Size board_sz = Size(numCornersHor, numCornersVer);
-
-	VideoCapture capture = VideoCapture(0);
+	capture.set(CAP_PROP_FPS, 30);
+	capture.set(CAP_PROP_FRAME_WIDTH, 640);
+	capture.set(CAP_PROP_FRAME_HEIGHT, 480);
 
 	std::vector<std::vector<Point3f>> object_points;
 	std::vector<std::vector<Point2f>> image_points;
-
-	std::vector<Point2f> corners;
-	int successes = 0;
 
 	Mat image;
 	Mat gray_image;
@@ -36,110 +50,100 @@ int main()
 
 	bool png = false;
 
-
 	std::vector<int> compression_params;
 
-	if (png) 
+	if (png)
 	{
 		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-		compression_params.push_back(2);
+		compression_params.push_back(9);
+		compression_params.push_back(IMWRITE_PNG_STRATEGY);
+		compression_params.push_back(IMWRITE_PNG_STRATEGY_FILTERED);
 	}
 	else
 	{
 		compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-		compression_params.push_back(90);
+		compression_params.push_back(50);
 	}
 
-	//imencode(".png", image, buf, compression_params);
-
-	while (true) {
+	while (running) 
+	{
+		capture >> image;
 		cvtColor(image, gray_image, CV_BGR2GRAY);
+
 		std::vector<uchar> buf;
-		int64 start = cv::getTickCount();
-		imshow("win1", image);
+
 		if (png)
 		{
 			imencode(".png", gray_image, buf, compression_params);
-			//imwrite("test.png", gray_image, compression_params);
 		}
-		else 
+		else
 		{
 			imencode(".jpg", gray_image, buf, compression_params);
-			//imwrite("test.jpg", gray_image, compression_params);
-		}
-		imshow("win2", imdecode(buf,0));
-		capture >> image;
-		int key = waitKey(1);
-
-		if (key == 27)
-			return 0;
-
-		double fps = cv::getTickFrequency() / (cv::getTickCount() - start);
-		std::cout << "FPS : " << fps << "  Compress Size(KB): " << (double)buf.size() / 1024 << "  Orginal Size(KB): " << (double)(image.size().width* image.size().height) / 1024 << "  MBit/s:" << (double)buf.size() / 1024 /1024*fps << std::endl;
-	}
-
-	std::vector<Point3f> obj;
-	for (int j = 0; j < numSquares; j++)
-		obj.push_back(Point3f(j / numCornersHor, j%numCornersHor, 0.0f));
-
-	while (successes < numBoards)
-	{
-		cvtColor(image, gray_image, CV_BGR2GRAY);
-
-		bool found = findChessboardCorners(image, board_sz, corners, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
-
-		if (found)
-		{
-			cornerSubPix(gray_image, corners, Size(11, 11), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1));
-			drawChessboardCorners(gray_image, board_sz, corners, found);
 		}
 
-		imshow("win1", image);
-		imshow("win2", gray_image);
-
-		capture >> image;
-		int key = waitKey(1);
-
-		if (key == 27)
-
-			return 0;
-
-		if (key == ' ' && found != 0)
-		{
-			image_points.push_back(corners);
-			object_points.push_back(obj);
-
-			printf("Snap stored!");
-
-			successes++;
-
-			if (successes >= numBoards)
-				break;
-		}
-	}
-
-	Mat intrinsic = Mat(3, 3, CV_32FC1);
-	Mat distCoeffs;
-	std::vector<Mat> rvecs;
-	std::vector<Mat> tvecs;
-
-	intrinsic.ptr<float>(0)[0] = 1;
-	intrinsic.ptr<float>(1)[1] = 1;
-
-	calibrateCamera(object_points, image_points, image.size(), intrinsic, distCoeffs, rvecs, tvecs);
-
-	Mat imageUndistorted;
-	while (1)
-	{
-		capture >> image;
-		undistort(image, imageUndistorted, intrinsic, distCoeffs);
-
-		imshow("win1", image);
-		imshow("win2", imageUndistorted);
-		waitKey(1);
+		pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 
 	capture.release();
+}
+
+void doWork3()
+{
+	while (running) {
+		pLinkUpNode->progress(0, 0, 1000, false);
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	try
+	{
+		pLinkUpNode = new LinkUpNode("test");
+
+		/*for (int i = 1; i <= 5; i++) {
+		char str[25] = { 0 };
+		sprintf(str, "label_int_%d", i);
+		LinkUpPropertyLabel_Int32* pLabel = new  LinkUpPropertyLabel_Int32(str, pLinkUpNode);
+		pLabel->setValue(12);
+		}
+
+		for (int i = 1; i <= 5; i++) {
+		char str[25] = { 0 };
+		sprintf(str, "label_bin_%d", i);
+		LinkUpPropertyLabel_Binary* pLabel = new  LinkUpPropertyLabel_Binary(str, 25, pLinkUpNode);
+		pLabel->setValue((uint8_t*)str);
+		}*/
+
+		pEvent = new  LinkUpEventLabel("label_event", pLinkUpNode);
+
+		boost::shared_ptr< boost::asio::io_service::work > work(
+			new boost::asio::io_service::work(io_service)
+		);
+
+		tcp_server server(io_service, 3000, pLinkUpNode, 1);
+
+		std::cout << "Press [return] to exit." << std::endl;
+
+		boost::thread_group worker_threads;
+		worker_threads.create_thread(doWork);
+		worker_threads.create_thread(doWork2);
+		worker_threads.create_thread(doWork3);
+
+		std::cin.get();
+
+		running = false;
+		io_service.stop();
+
+		worker_threads.join_all();
+
+		return 0;
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << "Exception: " << e.what() << "\n";
+	}
 
 	return 0;
 }
