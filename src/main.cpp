@@ -55,14 +55,14 @@ void doWork2()
 	if (png)
 	{
 		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-		compression_params.push_back(9);
+		compression_params.push_back(3);
 		compression_params.push_back(IMWRITE_PNG_STRATEGY);
 		compression_params.push_back(IMWRITE_PNG_STRATEGY_FILTERED);
 	}
 	else
 	{
 		compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-		compression_params.push_back(50);
+		compression_params.push_back(30);
 	}
 
 	while (running) 
@@ -82,6 +82,7 @@ void doWork2()
 		}
 
 		pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
+		//pEvent->fireEvent((uint8_t*)gray_image.data, gray_image.rows*gray_image.cols);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 

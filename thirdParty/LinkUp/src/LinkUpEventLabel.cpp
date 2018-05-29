@@ -29,14 +29,12 @@ void LinkUpEventLabel::progressAdv(LinkUpRaw* pConnector)
 {
 	lock();
 	LinkedListIterator iterator(pList);
-	unlock();
+
 	LinkUpEventData* pData;
 
 	while ((pData = (LinkUpEventData*)iterator.next()) != NULL)
 	{
-		lock();
 		pList->remove(pData);
-		unlock();
 
 		LinkUpPacket packet;
 		packet.nLength = sizeof(LinkUpLogic) + sizeof(LinkUpEventFireRequest) + pData->nSize;
@@ -48,11 +46,18 @@ void LinkUpEventLabel::progressAdv(LinkUpRaw* pConnector)
 
 		pEventFireRequest->nIdentifier = nIdentifier;
 		memcpy(pEventFireRequest->pData, pData->pData, pData->nSize);
-
-		pConnector->send(packet);
+		if (pData->nSize > 1024)
+		{
+			pConnector->send(packet, false);
+		}
+		else
+		{
+			pConnector->send(packet);
+		}
 
 		free(pData);
 	}
+	unlock();
 }
 
 void LinkUpEventLabel::subscribed(LinkUpRaw* pConnector) {
@@ -71,7 +76,6 @@ void LinkUpEventLabel::subscribed(LinkUpRaw* pConnector) {
 	pSubscribeResponse->nIdentifier = nIdentifier;
 
 	pConnector->send(packet);
-
 }
 
 void LinkUpEventLabel::unsubscribed(LinkUpRaw* pConnector) {
@@ -88,15 +92,18 @@ void LinkUpEventLabel::unsubscribed(LinkUpRaw* pConnector) {
 	}
 	unlock();
 
-	LinkUpPacket packet;
-	packet.nLength = (uint16_t)sizeof(LinkUpLogic) + (uint16_t)sizeof(LinkUpEventSubscribeResponse);
-	packet.pData = (uint8_t*)calloc(packet.nLength, sizeof(uint8_t));
+	if (pConnector != NULL)
+	{
+		LinkUpPacket packet;
+		packet.nLength = (uint16_t)sizeof(LinkUpLogic) + (uint16_t)sizeof(LinkUpEventSubscribeResponse);
+		packet.pData = (uint8_t*)calloc(packet.nLength, sizeof(uint8_t));
 
-	LinkUpLogic* pLogic = (LinkUpLogic*)packet.pData;
-	pLogic->nLogicType = LinkUpLogicType::EventUnsubscribeResponse;
-	LinkUpEventSubscribeResponse* pSubscribeResponse = (LinkUpEventSubscribeResponse*)pLogic->pInnerHeader;
+		LinkUpLogic* pLogic = (LinkUpLogic*)packet.pData;
+		pLogic->nLogicType = LinkUpLogicType::EventUnsubscribeResponse;
+		LinkUpEventSubscribeResponse* pSubscribeResponse = (LinkUpEventSubscribeResponse*)pLogic->pInnerHeader;
 
-	pSubscribeResponse->nIdentifier = nIdentifier;
+		pSubscribeResponse->nIdentifier = nIdentifier;
 
-	pConnector->send(packet);
+		pConnector->send(packet);
+	}
 }
