@@ -24,6 +24,7 @@ using namespace cv;
 boost::asio::io_service io_service;
 
 LinkUpEventLabel* pEvent;
+LinkUpPropertyLabel_Int8* pQualityLabel;
 LinkUpNode* pLinkUpNode;
 
 bool running = true;
@@ -50,39 +51,43 @@ void doWork2()
 
 	bool png = false;
 
-	std::vector<int> compression_params;
+	while (running)
+	{
+		std::vector<int> compression_params;
 
-	if (png)
-	{
-		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-		compression_params.push_back(3);
-		compression_params.push_back(IMWRITE_PNG_STRATEGY);
-		compression_params.push_back(IMWRITE_PNG_STRATEGY_FILTERED);
-	}
-	else
-	{
-		compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-		compression_params.push_back(30);
-	}
+		if (png)
+		{
+			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+			compression_params.push_back(3);
+			compression_params.push_back(IMWRITE_PNG_STRATEGY);
+			compression_params.push_back(IMWRITE_PNG_STRATEGY_FILTERED);
+		}
+		else
+		{
+			compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+			compression_params.push_back(pQualityLabel->getValue());
+		}
 
-	while (running) 
-	{
 		capture >> image;
 		cvtColor(image, gray_image, CV_BGR2GRAY);
 
 		std::vector<uchar> buf;
-
-		if (png)
+		if (pEvent->isSubscribed)
 		{
-			imencode(".png", gray_image, buf, compression_params);
-		}
-		else
-		{
-			imencode(".jpg", gray_image, buf, compression_params);
+			if (png)
+			{
+				imencode(".png", gray_image, buf, compression_params);
+			}
+			else
+			{
+				imencode(".jpg", gray_image, buf, compression_params);
+			}
+
+
+			pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
 		}
 
-		pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
-		//pEvent->fireEvent((uint8_t*)gray_image.data, gray_image.rows*gray_image.cols);
+
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 
@@ -118,6 +123,9 @@ int main(int argc, char* argv[])
 		}*/
 
 		pEvent = new  LinkUpEventLabel("label_event", pLinkUpNode);
+		pQualityLabel = new LinkUpPropertyLabel_Int8("jpeg_quality", pLinkUpNode);
+
+		pQualityLabel->setValue(30);
 
 		boost::shared_ptr< boost::asio::io_service::work > work(
 			new boost::asio::io_service::work(io_service)
