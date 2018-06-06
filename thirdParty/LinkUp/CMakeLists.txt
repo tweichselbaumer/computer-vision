@@ -18,6 +18,8 @@ set(linkup_SOURCE_FILES
   "src/LinkUpPropertyLabel.cpp"
   "src/LinkUpEventLabel.h"
   "src/LinkUpEventLabel.cpp"
+  "src/LinkUpFunctionLabel.cpp"
+  "src/LinkUpFunctionLabel.h"
 )
 
 add_library(LinkUp ${linkup_SOURCE_FILES})
