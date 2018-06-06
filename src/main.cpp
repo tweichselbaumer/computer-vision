@@ -1,6 +1,7 @@
 #include <opencv2\opencv.hpp>
 #include <opencv\highgui.h>
 #include <opencv2\opencv_modules.hpp>
+#include <opencv2\core/ocl.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -11,6 +12,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/thread.hpp>
 #include "socket/tcp_server.h"
+
 
 #include "AVLTree.h"
 #include "Platform.h"
@@ -36,6 +38,7 @@ void doWork()
 
 void doWork2()
 {
+	//cv::ocl::setUseOpenCL(true);
 	VideoCapture capture = VideoCapture(1);
 
 	capture.set(CAP_PROP_FPS, 30);
@@ -49,18 +52,16 @@ void doWork2()
 	Mat gray_image;
 	capture >> image;
 
-	bool png = false;
+	bool webp = true;
 
 	while (running)
 	{
 		std::vector<int> compression_params;
 
-		if (png)
+		if (webp)
 		{
-			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-			compression_params.push_back(3);
-			compression_params.push_back(IMWRITE_PNG_STRATEGY);
-			compression_params.push_back(IMWRITE_PNG_STRATEGY_FILTERED);
+			compression_params.push_back(IMWRITE_WEBP_QUALITY);
+			compression_params.push_back(pQualityLabel->getValue());
 		}
 		else
 		{
@@ -74,9 +75,9 @@ void doWork2()
 		std::vector<uchar> buf;
 		if (pEvent->isSubscribed)
 		{
-			if (png)
+			if (webp)
 			{
-				imencode(".png", gray_image, buf, compression_params);
+				imencode(".webp", gray_image, buf, compression_params);
 			}
 			else
 			{
@@ -88,7 +89,7 @@ void doWork2()
 		}
 
 
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
 	}
 
 	capture.release();
