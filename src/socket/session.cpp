@@ -60,10 +60,10 @@ void session::start()
 		{
 			if (ec == 0)
 			{
-				boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
 				start();
 			}
-			else {
+			else 
+			{
 				std::cout << "Closed connection [" << socket_.remote_endpoint().address().to_string() << ":" << socket_.remote_endpoint().port() << "]" << std::endl;
 				server_->removeSession(this);
 				return;

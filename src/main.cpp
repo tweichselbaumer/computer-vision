@@ -44,13 +44,16 @@ void doWork2()
 	capture.set(CAP_PROP_FPS, 30);
 	capture.set(CAP_PROP_FRAME_WIDTH, 640);
 	capture.set(CAP_PROP_FRAME_HEIGHT, 480);
+	capture.set(CAP_PROP_MONOCHROME, true);
+
 
 	std::vector<std::vector<Point3f>> object_points;
 	std::vector<std::vector<Point2f>> image_points;
 
-	Mat image;
+	//Mat image;
 	Mat gray_image;
-	capture >> image;
+	//capture >> image;
+	capture >> gray_image;
 
 	bool webp = true;
 
@@ -60,8 +63,10 @@ void doWork2()
 
 		if (webp)
 		{
-			compression_params.push_back(IMWRITE_WEBP_QUALITY);
-			compression_params.push_back(pQualityLabel->getValue());
+			/*compression_params.push_back(IMWRITE_WEBP_QUALITY);
+			compression_params.push_back(pQualityLabel->getValue());*/
+		/*	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+			compression_params.push_back(9);*/
 		}
 		else
 		{
@@ -69,15 +74,22 @@ void doWork2()
 			compression_params.push_back(pQualityLabel->getValue());
 		}
 
-		capture >> image;
-		cvtColor(image, gray_image, CV_BGR2GRAY);
+		//capture >> image;
+		capture >> gray_image;
+		//if (image.channels() == 3 || image.channels() == 4) {
+		//cvtColor(image, gray_image, CV_BGR2GRAY);
+		/*}
+		else {
+			gray_image = image.clone();
+		}*/
 
 		std::vector<uchar> buf;
 		if (pEvent->isSubscribed)
 		{
 			if (webp)
 			{
-				imencode(".webp", gray_image, buf, compression_params);
+				imencode(".bmp", gray_image, buf, compression_params);
+				//imwrite("test.bmp", gray_image, compression_params);
 			}
 			else
 			{
@@ -87,9 +99,6 @@ void doWork2()
 
 			pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
 		}
-
-
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
 	}
 
 	capture.release();
