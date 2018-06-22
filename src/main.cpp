@@ -1,7 +1,7 @@
-#include <opencv2\opencv.hpp>
-#include <opencv\highgui.h>
-#include <opencv2\opencv_modules.hpp>
-#include <opencv2\core/ocl.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv/highgui.h>
+#include <opencv2/opencv_modules.hpp>
+#include <opencv2/core/ocl.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -14,7 +14,7 @@
 #include "socket/tcp_server.h"
 
 
-#include "AVLTree.h"
+#include "AvlTree.h"
 #include "Platform.h"
 
 using boost::asio::ip::tcp;
@@ -39,7 +39,7 @@ void doWork()
 void doWork2()
 {
 	//cv::ocl::setUseOpenCL(true);
-	VideoCapture capture = VideoCapture(1);
+	VideoCapture capture = VideoCapture(0);
 
 	capture.set(CAP_PROP_FPS, 30);
 	capture.set(CAP_PROP_FRAME_WIDTH, 640);
@@ -50,12 +50,13 @@ void doWork2()
 	std::vector<std::vector<Point3f>> object_points;
 	std::vector<std::vector<Point2f>> image_points;
 
-	//Mat image;
+	Mat image;
 	Mat gray_image;
-	//capture >> image;
-	capture >> gray_image;
+	capture >> image;
+	//capture >> gray_image;
 
-	bool webp = true;
+	bool webp = false;
+
 
 	while (running)
 	{
@@ -65,8 +66,8 @@ void doWork2()
 		{
 			/*compression_params.push_back(IMWRITE_WEBP_QUALITY);
 			compression_params.push_back(pQualityLabel->getValue());*/
-		/*	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-			compression_params.push_back(9);*/
+			/*	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+				compression_params.push_back(9);*/
 		}
 		else
 		{
@@ -74,10 +75,10 @@ void doWork2()
 			compression_params.push_back(pQualityLabel->getValue());
 		}
 
-		//capture >> image;
-		capture >> gray_image;
+		capture >> image;
+
 		//if (image.channels() == 3 || image.channels() == 4) {
-		//cvtColor(image, gray_image, CV_BGR2GRAY);
+		cvtColor(image, gray_image, CV_BGR2GRAY);
 		/*}
 		else {
 			gray_image = image.clone();
@@ -89,7 +90,7 @@ void doWork2()
 			if (webp)
 			{
 				imencode(".bmp", gray_image, buf, compression_params);
-				//imwrite("test.bmp", gray_image, compression_params);
+
 			}
 			else
 			{

@@ -23,6 +23,7 @@ add_definitions(-DLINKUP_BOOST_CRC16)
 add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LinkUp)
 
 find_package(OpenCV REQUIRED)
+message("OpenCV Version: "${OpenCV_VERSION})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 find_package(Boost REQUIRED COMPONENTS system thread)

@@ -2,7 +2,7 @@
   "environments": [
     {
       "environment": "includes",
-      "INCLUDE": "C:\\SKDs\\boost_1_64_0\\;C:\\SKDs\\OpenCV\\build\\include;C:\\SKDs\\nlohmann_json\\include"
+      "INCLUDE": "C:\\SKDs\\boost_1_64_0\\;C:\\SKDs\\OpenCV\\build\\include;C:\\SKDs\\nlohmann_json\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\c++\\8;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\local\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\local\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\x86_64-linux-gnu;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\x86_64-linux-gnu\\c++\\8;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\c++\\8\\backward\\;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\lib\\gcc\\x86_64-linux-gnu\\8\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\lib\\gcc\\x86_64-linux-gnu\\8\\include-fixed"
     }
   ],
   // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
@@ -63,6 +63,7 @@
       "remoteBuildRoot": "/var/tmp/build/${workspaceHash}/build/${name}",
       "remoteInstallRoot": "/var/tmp/build/${workspaceHash}/install/${name}",
       "remoteCopySources": true,
+      "intelliSenseMode": "linux-gcc-x64",
       "remoteCopySourcesOutputVerbosity": "Normal",
       "remoteCopySourcesConcurrentCopies": "10",
       "remoteCopySourcesMethod": "sftp",
