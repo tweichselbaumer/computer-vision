@@ -13,6 +13,7 @@
 #include <boost/thread.hpp>
 #include "socket/tcp_server.h"
 
+#include <uEye.h>
 
 #include "AvlTree.h"
 #include "Platform.h"
@@ -52,7 +53,7 @@ void doWork2()
 
 	Mat image;
 	Mat gray_image;
-	capture >> image;
+	//capture >> image;
 	//capture >> gray_image;
 
 	bool webp = false;
@@ -119,6 +120,8 @@ int main(int argc, char* argv[])
 	{
 		pLinkUpNode = new LinkUpNode("test");
 
+		int version = is_GetDLLVersion();
+
 		/*for (int i = 1; i <= 5; i++) {
 		char str[25] = { 0 };
 		sprintf(str, "label_int_%d", i);
@@ -148,7 +151,7 @@ int main(int argc, char* argv[])
 
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);
-		worker_threads.create_thread(doWork2);
+		//worker_threads.create_thread(doWork2);
 		worker_threads.create_thread(doWork3);
 
 		std::cin.get();
