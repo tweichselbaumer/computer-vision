@@ -17,16 +17,6 @@ file(GLOB_RECURSE cv_SOURCE_FILES "${PROJECT_SOURCE_DIR}/src"
     "*.cpp"
 )
 
-if(${WITH_UEYE_CAMERA})
-	message("Compile with uEye Camera.")
-	add_definitions(-DUSE_UEYE_CAMERA)
-endif(${WITH_UEYE_CAMERA})
-
-if(${WITH_CV_CAMERA})
-	message("Compile with OpenCV Camera.")
-		add_definitions(-DUSE_CV_CAMERA)
-endif(${WITH_UEYE_CAMERA})
-
 add_definitions(-DLINKUP_BOOST_THREADSAFE)
 add_definitions(-DLINKUP_BOOST_CRC16)
 

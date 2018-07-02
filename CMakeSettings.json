@@ -2,13 +2,13 @@
   "environments": [
     {
       "environment": "includes",
-      "INCLUDE": "C:\\SKDs\\boost_1_64_0\\;C:\\SKDs\\OpenCV\\build\\include;C:\\SKDs\\nlohmann_json\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\c++\\8;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\local\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\local\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\x86_64-linux-gnu;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\x86_64-linux-gnu\\c++\\8;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\include\\c++\\8\\backward\\;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\lib\\gcc\\x86_64-linux-gnu\\8\\include;C:\\Users\\thoma\\AppData\\Local\\Microsoft\\Linux\\Header Cache\\1.0\\-460175653\\usr\\lib\\gcc\\x86_64-linux-gnu\\8\\include-fixed"
+      "INCLUDE": "C:\\Program Files\\IDS\\uEye\\Develop\\include;C:\\\\SKDs\\\\boost_1_64_0\\\\;C:\\\\SKDs\\\\OpenCV\\\\build\\\\include;C:\\\\SKDs\\\\nlohmann_json\\\\include;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\include;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\include\\\\c++\\\\8;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\local\\\\include;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\local\\\\include;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\include\\\\x86_64-linux-gnu;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\include\\\\x86_64-linux-gnu\\\\c++\\\\8;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\include\\\\c++\\\\8\\\\backward\\\\;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\lib\\\\gcc\\\\x86_64-linux-gnu\\\\8\\\\include;C:\\\\Users\\\\thoma\\\\AppData\\\\Local\\\\Microsoft\\\\Linux\\\\Header Cache\\\\1.0\\\\-460175653\\\\usr\\\\lib\\\\gcc\\\\x86_64-linux-gnu\\\\8\\\\include-fixed"
     }
   ],
   // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
   "configurations": [
     {
-      "name": "x64-Debug-cvCam",
+      "name": "x64-Debug",
       "generator": "Ninja",
       "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x64_x64" ],
@@ -16,16 +16,10 @@
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "WITH_CV_CAMERA",
-          "value": "TRUE"
-        }
-      ]
+      "ctestCommandArgs": ""
     },
     {
-      "name": "x64-Release-cvCam",
+      "name": "x64-Release",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
       "inheritEnvironments": [ "msvc_x64_x64" ],
@@ -33,47 +27,7 @@
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "WITH_CV_CAMERA",
-          "value": "TRUE"
-        }
-      ]
-    },
-    {
-      "name": "x64-Debug-uEyeCam",
-      "generator": "Ninja",
-      "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
-      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "WITH_UEYE_CAMERA",
-          "value": "TRUE"
-        }
-      ]
-    },
-    {
-      "name": "x64-Release-uEyeCam",
-      "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
-      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "WITH_UEYE_CAMERA",
-          "value": "TRUE"
-        }
-      ]
+      "ctestCommandArgs": ""
     },
     {
       "name": "Linux-Debug",
@@ -94,13 +48,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "linux-x64", "includes" ],
-      "variables": [
-        {
-          "name": "WITH_UEYE_CAMERA",
-          "value": "TRUE"
-        }
-      ]
+      "inheritEnvironments": [ "linux-x64", "includes" ]
     },
     {
       "name": "Linux-Release",
@@ -120,13 +68,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "linux-x64", "includes" ],
-      "variables": [
-        {
-          "name": "WITH_UEYE_CAMERA",
-          "value": "TRUE"
-        }
-      ]
+      "inheritEnvironments": [ "linux-x64", "includes" ]
     }
   ]
 }

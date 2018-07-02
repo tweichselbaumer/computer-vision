@@ -46,6 +46,7 @@ void doWork22()
 	if (nRet != IS_SUCCESS)
 	{
 		//TODO: error
+		return;
 	}
 
 	nRet = is_SetColorMode(hCam, IS_CM_MONO8);
