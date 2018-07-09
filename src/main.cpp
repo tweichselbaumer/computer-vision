@@ -18,7 +18,11 @@
 #include "AvlTree.h"
 #include "Platform.h"
 
+#include <boost/asio/serial_port.hpp> 
+#include <boost/asio.hpp> 
+
 using boost::asio::ip::tcp;
+
 
 using namespace boost::timer;
 using namespace std;
@@ -114,12 +118,12 @@ void doWork22()
 	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_WHITEBALANCE, &enable, 0);
 	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &enable, 0);
 
-	is_SetExternalTrigger(hCam, IS_SET_TRIGGER_SOFTWARE);
+	//is_SetExternalTrigger(hCam, IS_SET_TRIGGER_SOFTWARE);
 
-	bool webp = false;
+	bool webp = true;
 
 	double FPS, NEWFPS;
-	FPS = 40;
+	FPS = 20;
 	is_SetFrameRate(hCam, FPS, &NEWFPS);
 
 	while (running)
@@ -243,108 +247,29 @@ void doWork2()
 	capture.release();
 }
 
+void testSerial()
+{
+	uint8_t pBuffer[1024];
+	LinkUpRaw raw = { };
+	boost::asio::io_service io;
+	boost::asio::serial_port port(io);
+
+	port.open("/dev/ttyS5");
+	port.set_option(boost::asio::serial_port_base::baud_rate(115200));
+	while (true) {
+		uint32_t count = boost::asio::read(port, boost::asio::buffer(pBuffer, 1024));
+		raw.progress(pBuffer, count);
+		while (raw.hasNext()) {
+			std::cout << "Packet!" << endl;
+		}
+	}
+}
+
 void doWork3()
 {
 	while (running) {
 		pLinkUpNode->progress(0, 0, 1000, false);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-	}
-}
-
-void testIDS()
-{
-	int version = is_GetDLLVersion();
-	INT nRet;
-
-	HIDS hCam = 0;
-	nRet = is_InitCamera(&hCam, NULL);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	nRet = is_SetColorMode(hCam, IS_CM_MONO8);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	nRet = is_SetBinning(hCam, IS_BINNING_2X_VERTICAL | IS_BINNING_2X_HORIZONTAL);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	IS_RECT rectAOI;
-	rectAOI.s32X = 64;
-	rectAOI.s32Y = 0;
-	rectAOI.s32Width = 512;
-	rectAOI.s32Height = 512;
-
-	nRet = is_AOI(hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	INT id;
-	char* pImgMem;
-
-	nRet = is_AllocImageMem(hCam, 512, 512, 8, &pImgMem, &id);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	nRet = is_SetImageMem(hCam, pImgMem, id);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	nRet = is_SetDisplayMode(hCam, IS_SET_DM_DIB);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	double enable = 1;
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_GAIN, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_WHITEBALANCE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_FRAMERATE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SHUTTER, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_GAIN, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_WHITEBALANCE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &enable, 0);
-
-	double FPS, NEWFPS;
-	FPS = 30;
-	is_SetFrameRate(hCam, FPS, &NEWFPS);
-
-	while (1) {
-		nRet = is_FreezeVideo(hCam, IS_WAIT);
-		if (nRet != IS_SUCCESS)
-		{
-			//TODO: error
-		}
-
-		void* pMem;
-
-		nRet = is_GetImageMem(hCam, &pMem);
-		if (nRet != IS_SUCCESS)
-		{
-			//TODO: error
-		}
-
-		Mat frame(512, 512, CV_8UC1);
-		memcpy(frame.data, pMem, 512 * 512 * sizeof(uint8_t));
-		imshow("A", frame);
-		waitKey(1);
-		std::vector<int> compression_params;
-		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-		compression_params.push_back(9);
-		std::vector<uchar> buf;
-		imencode(".png", frame, buf, compression_params);
 	}
 }
 
@@ -354,21 +279,7 @@ int main(int argc, char* argv[])
 	{
 		pLinkUpNode = new LinkUpNode("test");
 
-		//testIDS();
-
-		/*for (int i = 1; i <= 5; i++) {
-		char str[25] = { 0 };
-		sprintf(str, "label_int_%d", i);
-		LinkUpPropertyLabel_Int32* pLabel = new  LinkUpPropertyLabel_Int32(str, pLinkUpNode);
-		pLabel->setValue(12);
-		}
-
-		for (int i = 1; i <= 5; i++) {
-		char str[25] = { 0 };
-		sprintf(str, "label_bin_%d", i);
-		LinkUpPropertyLabel_Binary* pLabel = new  LinkUpPropertyLabel_Binary(str, 25, pLinkUpNode);
-		pLabel->setValue((uint8_t*)str);
-		}*/
+		testSerial();
 
 		pEvent = new  LinkUpEventLabel("label_event", pLinkUpNode);
 		pQualityLabel = new LinkUpPropertyLabel_Int8("jpeg_quality", pLinkUpNode);
