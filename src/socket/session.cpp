@@ -1,11 +1,6 @@
-#include "tcp_server.h"
-#include "session.h"
+#include "Session.h"
 
-#include <cstdlib>
-#include <iostream>
-
-
-session::session(tcp::socket socket, tcp_server* server, LinkUpNode* node)
+Session::Session(tcp::socket socket, TcpServer* server, LinkUpNode* node)
 	: socket_(std::move(socket))
 {
 	server_ = server;
@@ -21,7 +16,7 @@ session::session(tcp::socket socket, tcp_server* server, LinkUpNode* node)
 	length1_ = node_->getRaw(dataOut1_, max_length);
 }
 
-void session::read()
+void Session::read()
 {
 	auto self(shared_from_this());
 	socket_.async_read_some(boost::asio::buffer(dataIn_, max_length),
@@ -39,7 +34,7 @@ void session::read()
 	});
 }
 
-session::~session() 
+Session::~Session()
 {
 	free(dataIn_);
 	free(dataOut1_);
@@ -47,7 +42,7 @@ session::~session()
 }
 
 
-void session::start()
+void Session::start()
 {
 	auto self(shared_from_this());
 	boost::system::error_code error;

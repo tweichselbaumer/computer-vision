@@ -11,19 +11,14 @@
 #include <boost/asio.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/thread.hpp>
-#include "socket/tcp_server.h"
 
-#include <uEye.h>
+#include "system/InputModule.h"
 
 #include "AvlTree.h"
 #include "Platform.h"
-
-#include <boost/asio/serial_port.hpp> 
-#include <boost/asio.hpp> 
+#include "socket/TcpServer.h"
 
 using boost::asio::ip::tcp;
-
-
 using namespace boost::timer;
 using namespace std;
 using namespace cv;
@@ -31,8 +26,12 @@ using namespace cv;
 boost::asio::io_service io_service;
 
 LinkUpEventLabel* pEvent;
+LinkUpEventLabel* pImuEvent;
+TcpServer* pTcpServer;
 LinkUpPropertyLabel_Int8* pQualityLabel;
 LinkUpNode* pLinkUpNode;
+
+InputModule* pInputModule;
 
 bool running = true;
 
@@ -41,231 +40,39 @@ void doWork()
 	io_service.run();
 }
 
-void doWork22()
-{
-	INT nRet;
-
-	HIDS hCam = 0;
-	nRet = is_InitCamera(&hCam, NULL);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-		return;
-	}
-
-	nRet = is_SetColorMode(hCam, IS_CM_MONO8);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	nRet = is_SetBinning(hCam, IS_BINNING_2X_VERTICAL | IS_BINNING_2X_HORIZONTAL);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	IS_RECT rectAOI;
-	rectAOI.s32X = 64;
-	rectAOI.s32Y = 0;
-	rectAOI.s32Width = 512;
-	rectAOI.s32Height = 512;
-
-	nRet = is_AOI(hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	INT id;
-	char* pImgMem;
-
-	nRet = is_AllocImageMem(hCam, 512, 512, 8, &pImgMem, &id);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	Mat image(512, 512, CV_8UC1);
-
-	nRet = is_SetImageMem(hCam, pImgMem, id);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	UINT nRange[3];
-
-	ZeroMemory(nRange, sizeof(nRange));
-
-	nRet = is_PixelClock(hCam, IS_PIXELCLOCK_CMD_GET_RANGE, (void*)nRange, sizeof(nRange));
-
-	nRet = is_PixelClock(hCam, IS_PIXELCLOCK_CMD_SET,
-		(void*)&nRange[1], sizeof(nRange[1]));
-
-	nRet = is_SetDisplayMode(hCam, IS_SET_DM_DIB);
-	if (nRet != IS_SUCCESS)
-	{
-		//TODO: error
-	}
-
-	double enable = 1;
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_GAIN, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_WHITEBALANCE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_FRAMERATE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SHUTTER, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_GAIN, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_WHITEBALANCE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &enable, 0);
-
-	//is_SetExternalTrigger(hCam, IS_SET_TRIGGER_SOFTWARE);
-
-	bool webp = true;
-
-	double FPS, NEWFPS;
-	FPS = 20;
-	is_SetFrameRate(hCam, FPS, &NEWFPS);
-
-	while (running)
-	{
-		std::vector<int> compression_params;
-
-		if (webp)
-		{
-			/*compression_params.push_back(IMWRITE_WEBP_QUALITY);
-			compression_params.push_back(pQualityLabel->getValue());*/
-			/*compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-			compression_params.push_back(9);*/
-		}
-		else
-		{
-			compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-			compression_params.push_back(pQualityLabel->getValue());
-		}
-
-		nRet = is_FreezeVideo(hCam, IS_WAIT);
-		if (nRet != IS_SUCCESS)
-		{
-			//TODO: error
-		}
-
-		void* pMem;
-
-		nRet = is_GetImageMem(hCam, &pMem);
-		if (nRet != IS_SUCCESS)
-		{
-			//TODO: error
-		}
-
-		memcpy(image.data, pMem, 512 * 512 * sizeof(uint8_t));
-
-		std::vector<uchar> buf;
-		if (pEvent->isSubscribed)
-		{
-			if (webp)
-			{
-				imencode(".bmp", image, buf, compression_params);
-
-			}
-			else
-			{
-				imencode(".jpg", image, buf, compression_params);
-			}
-
-
-			pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
-		}
-	}
-}
-
 void doWork2()
 {
-	//cv::ocl::setUseOpenCL(true);
-	VideoCapture capture = VideoCapture(0);
-
-	capture.set(CAP_PROP_FPS, 30);
-	capture.set(CAP_PROP_FRAME_WIDTH, 640);
-	capture.set(CAP_PROP_FRAME_HEIGHT, 480);
-	capture.set(CAP_PROP_MONOCHROME, true);
-
-
-	std::vector<std::vector<Point3f>> object_points;
-	std::vector<std::vector<Point2f>> image_points;
-
-	Mat image;
-	Mat gray_image;
-	//capture >> image;
-	//capture >> gray_image;
-
-	bool webp = false;
-
-
 	while (running)
 	{
-		std::vector<int> compression_params;
-
-		if (webp)
+		FramePackage* pFramePackage = pInputModule->next();
+		if (pFramePackage->imu.cam)
 		{
-			/*compression_params.push_back(IMWRITE_WEBP_QUALITY);
-			compression_params.push_back(pQualityLabel->getValue());*/
-			/*	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-				compression_params.push_back(9);*/
-		}
-		else
-		{
-			compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-			compression_params.push_back(pQualityLabel->getValue());
-		}
-
-		capture >> image;
-
-		//if (image.channels() == 3 || image.channels() == 4) {
-		cvtColor(image, gray_image, CV_BGR2GRAY);
-		/*}
-		else {
-			gray_image = image.clone();
-		}*/
-
-		std::vector<uchar> buf;
-		if (pEvent->isSubscribed)
-		{
-			if (webp)
+			std::vector<uchar> buf;
+			if (pEvent->isSubscribed)
 			{
-				imencode(".bmp", gray_image, buf, compression_params);
-
+				if (true)
+				{
+					std::vector<int> compression_params;
+					compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+					compression_params.push_back(pQualityLabel->getValue());
+					imencode(".png", pFramePackage->image, buf, std::vector<int>());
+				}
+				else
+				{
+					imencode(".bmp", pFramePackage->image, buf, std::vector<int>());
+				}
+				pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
 			}
-			else
-			{
-				imencode(".jpg", gray_image, buf, compression_params);
-			}
-
-
-			pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
 		}
-	}
-
-	capture.release();
-}
-
-void testSerial()
-{
-	uint8_t pBuffer[1024];
-	LinkUpRaw raw = { };
-	boost::asio::io_service io;
-	boost::asio::serial_port port(io);
-
-	port.open("/dev/ttyS5");
-	port.set_option(boost::asio::serial_port_base::baud_rate(115200));
-	while (true) {
-		uint32_t count = boost::asio::read(port, boost::asio::buffer(pBuffer, 1024));
-		raw.progress(pBuffer, count);
-		while (raw.hasNext()) {
-			std::cout << "Packet!" << endl;
+		if (pImuEvent->isSubscribed)
+		{
+			pImuEvent->fireEvent((uint8_t*)&(pFramePackage->imu), sizeof(ImuData));
 		}
+		pInputModule->release(pFramePackage);
 	}
 }
 
-void doWork3()
+void linkUpWorker()
 {
 	while (running) {
 		pLinkUpNode->progress(0, 0, 1000, false);
@@ -279,25 +86,28 @@ int main(int argc, char* argv[])
 	{
 		pLinkUpNode = new LinkUpNode("test");
 
-		testSerial();
-
 		pEvent = new  LinkUpEventLabel("label_event", pLinkUpNode);
+		pImuEvent = new  LinkUpEventLabel("imu_event", pLinkUpNode);
 		pQualityLabel = new LinkUpPropertyLabel_Int8("jpeg_quality", pLinkUpNode);
 
-		pQualityLabel->setValue(30);
+		pQualityLabel->setValue(9);
 
-		boost::shared_ptr< boost::asio::io_service::work > work(
+		boost::shared_ptr<boost::asio::io_service::work> work(
 			new boost::asio::io_service::work(io_service)
 		);
 
-		tcp_server server(io_service, 3000, pLinkUpNode, 1);
+		pTcpServer = new TcpServer(io_service, 3000, pLinkUpNode, 1);
 
 		std::cout << "Press [return] to exit." << std::endl;
 
+		pInputModule = new InputModule(io_service);
+
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);
-		worker_threads.create_thread(doWork22);
-		worker_threads.create_thread(doWork3);
+		worker_threads.create_thread(doWork2);
+		worker_threads.create_thread(linkUpWorker);
+
+		pInputModule->start();
 
 		std::cin.get();
 
@@ -305,6 +115,7 @@ int main(int argc, char* argv[])
 		io_service.stop();
 
 		worker_threads.join_all();
+		pInputModule->stop();
 
 		return 0;
 	}
