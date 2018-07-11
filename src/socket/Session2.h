@@ -18,6 +18,7 @@ public:
 	Session(tcp::socket socket, TcpServer* server, LinkUpNode* node);
 	void start();
 	void read();
+	void write();
 	~Session();
 	boost::asio::ip::address address_;
 	uint16_t port_;
@@ -33,8 +34,6 @@ private:
 	uint32_t length2_ = 0;
 
 	boost::mutex mtx;
-
-	bool read_done = true;
 
 	tcp::socket socket_;
 	TcpServer* server_;

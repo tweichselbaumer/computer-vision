@@ -24,8 +24,12 @@ void Session::read()
 	{
 		if (ec == 0)
 		{
-			node_->progress(dataIn_, length, 10000, true);
-			read_done = true;
+			node_->progress(dataIn_, length, 0, true);
+			if (length == 0)
+			{
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+			}
+			read();
 		}
 		else {
 			server_->removeSession(this);
@@ -41,19 +45,19 @@ Session::~Session()
 	free(dataOut2_);
 }
 
-
 void Session::start()
+{
+	this->write();
+	this->read();
+}
+
+void Session::write()
 {
 	auto self(shared_from_this());
 	boost::system::error_code error;
 
 	try
 	{
-		if (read_done) {
-			read_done = false;
-			read();
-		}
-
 		mtx.lock();
 
 		length2_ = length1_;
