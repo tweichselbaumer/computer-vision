@@ -21,13 +21,16 @@ public:
 private:
 	enum { queueSize = 1000 };
 	void doWork();
+	void doWorkCamera();
 	boost::lockfree::queue<FramePackage*>* pOutQueue_;
 	boost::lockfree::queue<FramePackage*>* pFreeQueue_;
+	boost::lockfree::queue<FramePackage*>* pCameraQueue_;
 	boost::thread thread_;
+	boost::thread cameraThread_;
 	bool bIsRunning_ = false;
 	Camera* pCamera_ = new uEyeCamera();
 
-	uint8_t pBuffer_[1024];
+	uint8_t pBuffer_[64];
 	LinkUpRaw raw_ = { };
 	boost::asio::serial_port* pPort_;
 };

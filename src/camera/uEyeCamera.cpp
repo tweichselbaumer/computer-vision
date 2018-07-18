@@ -72,8 +72,9 @@ uint8_t uEyeCamera::open()
 	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &enable, 0);
 
 	double FPS, NEWFPS;
-	FPS = 33;
+	FPS = 20;
 	is_SetFrameRate(hCam, FPS, &NEWFPS);
+	//is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI);
 	return 0;
 }
 

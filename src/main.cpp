@@ -75,7 +75,7 @@ void doWork2()
 void linkUpWorker()
 {
 	while (running) {
-		pLinkUpNode->progress(0, 0, 10000, false);
+		pLinkUpNode->progress(0, 0, 100, false);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 }

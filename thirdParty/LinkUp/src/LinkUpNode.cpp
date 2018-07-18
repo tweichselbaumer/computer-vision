@@ -25,6 +25,7 @@ void LinkUpNode::reset() {
 	timestamps.nPingTimeout = 0;
 	timestamps.nInitTryTimeout = 0;
 	progress(NULL, 0, 0, true);
+	progress(NULL, 0, 0, true);
 }
 
 void LinkUpNode::progress(uint8_t* pData, uint16_t nCount, uint16_t nMax, bool bFast)
