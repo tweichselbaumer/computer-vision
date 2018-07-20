@@ -21,11 +21,13 @@ public:
 private:
 	enum { queueSize = 1000 };
 	void doWork();
+	void doWorkPing();
 	void doWorkCamera();
 	boost::lockfree::queue<FramePackage*>* pOutQueue_;
 	boost::lockfree::queue<FramePackage*>* pFreeQueue_;
 	boost::lockfree::queue<FramePackage*>* pCameraQueue_;
 	boost::thread thread_;
+	boost::thread threadPing_;
 	boost::thread cameraThread_;
 	bool bIsRunning_ = false;
 	Camera* pCamera_ = new uEyeCamera();

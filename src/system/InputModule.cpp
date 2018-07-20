@@ -23,7 +23,24 @@ void InputModule::start()
 	pCamera_->open();
 	bIsRunning_ = true;
 	thread_ = boost::thread(boost::bind(&InputModule::doWork, this));
+	threadPing_ = boost::thread(boost::bind(&InputModule::doWorkPing, this));
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
+}
+
+void InputModule::doWorkPing()
+{
+	uint8_t pTemp[64];
+
+	while (bIsRunning_)
+	{
+		LinkUpPacket packet;
+		packet.nLength = 1;
+		packet.pData = (uint8_t*)calloc(1, sizeof(uint8_t));
+		packet.pData[0] = 1;
+		raw_.send(packet);
+		uint16_t nBytesToWrite = raw_.getRaw(pTemp, 64);
+		boost::asio::write(*pPort_, boost::asio::buffer(pTemp, nBytesToWrite));
+	}
 }
 
 void InputModule::release(FramePackage* pframePackage)
@@ -80,7 +97,7 @@ void InputModule::doWork()
 			FramePackage* pFramePackage = NULL;
 			if (((ImuData*)packet.pData)->cam)
 			{
-				if(pCameraQueue_->empty())
+				if (pCameraQueue_->empty())
 				{
 					while (pFreeQueue_->empty())
 					{
