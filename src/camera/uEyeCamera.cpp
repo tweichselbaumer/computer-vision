@@ -73,8 +73,8 @@ uint8_t uEyeCamera::open()
 
 	double FPS, NEWFPS;
 	FPS = 20;
-	is_SetFrameRate(hCam, FPS, &NEWFPS);
-	//is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI);
+	//is_SetFrameRate(hCam, FPS, &NEWFPS);
+	is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI);
 	return 0;
 }
 

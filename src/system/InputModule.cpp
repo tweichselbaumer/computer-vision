@@ -40,6 +40,7 @@ void InputModule::doWorkPing()
 		raw_.send(packet);
 		uint16_t nBytesToWrite = raw_.getRaw(pTemp, 64);
 		boost::asio::write(*pPort_, boost::asio::buffer(pTemp, nBytesToWrite));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
 	}
 }
 
