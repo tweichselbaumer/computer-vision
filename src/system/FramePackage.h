@@ -7,8 +7,8 @@
 #include "Platform.h"
 
 PACK(ImuData{
-	uint32_t timestamp;
-	uint32_t sample;
+	uint32_t timestamp_ms;
+	uint32_t timestamp_us;
 	int16_t gx;
 	int16_t gy;
 	int16_t gz;

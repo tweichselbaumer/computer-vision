@@ -25,10 +25,10 @@ using namespace cv;
 
 boost::asio::io_service io_service;
 
-LinkUpEventLabel* pEvent;
+LinkUpEventLabel* pCameraEvent;
 LinkUpEventLabel* pImuEvent;
+LinkUpEventLabel* pCameraImuEvent;
 TcpServer* pTcpServer;
-LinkUpPropertyLabel_Int8* pQualityLabel;
 LinkUpNode* pLinkUpNode;
 
 InputModule* pInputModule;
@@ -42,31 +42,42 @@ void doWork()
 
 void doWork2()
 {
+	std::vector<int> compression_params;
+	/*compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	compression_params.push_back(0);*/
+
 	while (running)
 	{
 		FramePackage* pFramePackage = pInputModule->next();
 		if (pFramePackage->imu.cam)
 		{
 			std::vector<uchar> buf;
-			if (pEvent->isSubscribed)
+			if (pCameraEvent->isSubscribed)
 			{
-				if (true)
-				{
-					std::vector<int> compression_params;
-					compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-					compression_params.push_back(pQualityLabel->getValue());
-					imencode(".png", pFramePackage->image, buf, std::vector<int>());
-				}
-				else
-				{
-					imencode(".bmp", pFramePackage->image, buf, std::vector<int>());
-				}
-				pEvent->fireEvent((uint8_t*)&buf[0], buf.size());
+				imencode(".bmp", pFramePackage->image, buf, compression_params);
+				pCameraEvent->fireEvent((uint8_t*)&buf[0], buf.size());
 			}
 		}
 		if (pImuEvent->isSubscribed)
 		{
 			pImuEvent->fireEvent((uint8_t*)&(pFramePackage->imu), sizeof(ImuData));
+		}
+		if (pCameraImuEvent->isSubscribed)
+		{
+			if (pFramePackage->imu.cam)
+			{
+				std::vector<uchar> buf;
+
+				imencode(".bmp", pFramePackage->image, buf, compression_params);
+				uint8_t pTemp[buf.size() + sizeof(ImuData)];
+				memcpy(pTemp + sizeof(ImuData), (uint8_t*)&buf[0], buf.size());
+				*(ImuData*)pTemp = pFramePackage->imu;
+				pCameraImuEvent->fireEvent(pTemp, buf.size() + sizeof(ImuData));
+			}
+			else
+			{
+				pCameraImuEvent->fireEvent((uint8_t*)&(pFramePackage->imu), sizeof(ImuData));
+			}
 		}
 		pInputModule->release(pFramePackage);
 	}
@@ -76,6 +87,7 @@ void linkUpWorker()
 {
 	while (running) {
 		pLinkUpNode->progress(0, 0, 100, false);
+		pLinkUpNode->progress(0, 0, 100, true);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 }
@@ -84,13 +96,11 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		pLinkUpNode = new LinkUpNode("test");
+		pLinkUpNode = new LinkUpNode("computer_vision");
 
-		pEvent = new  LinkUpEventLabel("label_event", pLinkUpNode);
+		pCameraEvent = new  LinkUpEventLabel("camera_event", pLinkUpNode);
 		pImuEvent = new  LinkUpEventLabel("imu_event", pLinkUpNode);
-		pQualityLabel = new LinkUpPropertyLabel_Int8("jpeg_quality", pLinkUpNode);
-
-		pQualityLabel->setValue(9);
+		pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
 
 		boost::shared_ptr<boost::asio::io_service::work> work(
 			new boost::asio::io_service::work(io_service)
