@@ -61,22 +61,67 @@ uint8_t uEyeCamera::open()
 		return -1;
 	}
 
-	double enable = 1;
-	double disable = 0;
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_GAIN, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_WHITEBALANCE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_FRAMERATE, &disable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SHUTTER, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_GAIN, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_WHITEBALANCE, &enable, 0);
-	is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &enable, 0);
+	setExposure(0);
 
-	double FPS, NEWFPS;
-	FPS = 20;
+	//double FPS, NEWFPS;
+	//FPS = 20;
 	//is_SetFrameRate(hCam, FPS, &NEWFPS);
 	is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI);
+
+	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MIN, &minExposure, 8);
+	if (nRet != IS_SUCCESS)
+	{
+		return -1;
+	}
+
+	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MAX, &maxExposure, 8);
+	if (nRet != IS_SUCCESS)
+	{
+		return -1;
+	}
+
+	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_INC, &incExposure, 8);
+	if (nRet != IS_SUCCESS)
+	{
+		return -1;
+	}
+
 	return 0;
 }
+
+
+void uEyeCamera::setExposure(int16_t exposure)
+{
+	double enable = 1;
+	double disable = 0;
+
+	if (exposure != lastExposureSetting) {
+		if (exposure == -1)
+		{
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_GAIN, &enable, 0);
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_WHITEBALANCE, &enable, 0);
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_FRAMERATE, &disable, 0);
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SHUTTER, &enable, 0);
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_GAIN, &enable, 0);
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_WHITEBALANCE, &enable, 0);
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &enable, 0);
+		}
+		else
+		{
+			is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, &disable, 0);
+			double newExposure = incExposure * (exposure + 1.5);
+
+			if (newExposure < minExposure)
+				newExposure = minExposure;
+			else if (newExposure > maxExposure)
+				newExposure = maxExposure;
+
+			is_Exposure(hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &newExposure, 8);
+		}
+		lastExposureSetting = exposure;
+	}
+}
+
 
 uint8_t uEyeCamera::close()
 {
@@ -94,9 +139,11 @@ uint8_t uEyeCamera::close()
 	return 0;
 }
 
-uint8_t uEyeCamera::capture(uint8_t* pData)
+uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure)
 {
 	INT nRet;
+	setExposure(exposureSetting);
+	is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE, pNewExposure, 8);
 	nRet = is_FreezeVideo(hCam, IS_WAIT);
 	//nRet = is_CaptureVideo(hCam, IS_WAIT);
 	if (nRet != IS_SUCCESS)

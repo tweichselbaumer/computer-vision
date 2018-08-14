@@ -13,10 +13,15 @@ public:
 	uint8_t close();
 	uint16_t getHeight();
 	uint16_t getWidth();
-	uint8_t capture(uint8_t* pData);
+	uint8_t capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure);
 private:
 	HIDS hCam = 0;
 	INT id;
 	char* pImgMem;
+	double minExposure;
+	double maxExposure;
+	double incExposure;
+	int16_t lastExposureSetting = 1;
+	void setExposure(int16_t exposure);
 };
 #endif

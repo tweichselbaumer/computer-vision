@@ -1,11 +1,12 @@
 #include "InputModule.h"
 
-InputModule::InputModule(boost::asio::io_service& io_service)
+InputModule::InputModule(boost::asio::io_service& io_service, LinkUpPropertyLabel_Int16* pExposerLabel)
 {
 	pFreeQueue_ = new boost::lockfree::queue<FramePackage*>(queueSize);
 	pOutQueue_ = new boost::lockfree::queue<FramePackage*>(queueSize);
 	pCameraQueue_ = new boost::lockfree::queue<FramePackage*>(queueSize);
 	pPort_ = new boost::asio::serial_port(io_service);
+	pExposerLabel_ = pExposerLabel;
 }
 
 void InputModule::start()
@@ -79,7 +80,7 @@ void InputModule::doWorkCamera()
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
 		pFreeQueue_->pop(pFramePackage);
-		pCamera_->capture(pFramePackage->image.data);
+		pCamera_->capture(pFramePackage->image.data, pExposerLabel_->getValue(), &(pFramePackage->exposureTime));
 		pCameraQueue_->push(pFramePackage);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}

@@ -9,11 +9,12 @@
 #include <boost/asio/serial_port.hpp>
 #include "LinkUpRaw.h"
 #include <boost/asio.hpp>
+#include "LinkUpPropertyLabel.h"
 
 class InputModule
 {
 public:
-	InputModule(boost::asio::io_service& io_service);
+	InputModule(boost::asio::io_service& io_service, LinkUpPropertyLabel_Int16* pExposerLabel);
 	void start();
 	void stop();
 	FramePackage* next();
@@ -31,6 +32,7 @@ private:
 	boost::thread cameraThread_;
 	bool bIsRunning_ = false;
 	Camera* pCamera_ = new uEyeCamera();
+	LinkUpPropertyLabel_Int16* pExposerLabel_;
 
 	uint8_t pBuffer_[64];
 	LinkUpRaw raw_ = { };

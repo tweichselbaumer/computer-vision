@@ -28,6 +28,9 @@ boost::asio::io_service io_service;
 LinkUpEventLabel* pCameraEvent;
 LinkUpEventLabel* pImuEvent;
 LinkUpEventLabel* pCameraImuEvent;
+
+LinkUpPropertyLabel_Int16* pExposureLabel;
+
 TcpServer* pTcpServer;
 LinkUpNode* pLinkUpNode;
 
@@ -55,7 +58,10 @@ void doWork2()
 			if (pCameraEvent->isSubscribed)
 			{
 				imencode(".bmp", pFramePackage->image, buf, compression_params);
-				pCameraEvent->fireEvent((uint8_t*)&buf[0], buf.size());
+				uint8_t pTemp[buf.size() + sizeof(double)];
+				memcpy(pTemp, &pFramePackage->exposureTime, sizeof(double));
+				memcpy(pTemp + sizeof(double), (uint8_t*)&buf[0], buf.size());
+				pCameraEvent->fireEvent(pTemp, buf.size() + sizeof(double));
 			}
 		}
 		if (pImuEvent->isSubscribed)
@@ -69,10 +75,11 @@ void doWork2()
 				std::vector<uchar> buf;
 
 				imencode(".bmp", pFramePackage->image, buf, compression_params);
-				uint8_t pTemp[buf.size() + sizeof(ImuData)];
-				memcpy(pTemp + sizeof(ImuData), (uint8_t*)&buf[0], buf.size());
+				uint8_t pTemp[buf.size() + sizeof(ImuData) + sizeof(double)];
+				memcpy(pTemp + sizeof(ImuData), &pFramePackage->exposureTime, sizeof(double));
+				memcpy(pTemp + sizeof(ImuData) + sizeof(double), (uint8_t*)&buf[0], buf.size());
 				*(ImuData*)pTemp = pFramePackage->imu;
-				pCameraImuEvent->fireEvent(pTemp, buf.size() + sizeof(ImuData));
+				pCameraImuEvent->fireEvent(pTemp, buf.size() + sizeof(ImuData) + sizeof(double));
 			}
 			else
 			{
@@ -102,6 +109,9 @@ int main(int argc, char* argv[])
 		pImuEvent = new  LinkUpEventLabel("imu_event", pLinkUpNode);
 		pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
 
+		pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
+		pExposureLabel->setValue(-1);
+
 		boost::shared_ptr<boost::asio::io_service::work> work(
 			new boost::asio::io_service::work(io_service)
 		);
@@ -110,7 +120,7 @@ int main(int argc, char* argv[])
 
 		std::cout << "Press [return] to exit." << std::endl;
 
-		pInputModule = new InputModule(io_service);
+		pInputModule = new InputModule(io_service, pExposureLabel);
 
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);

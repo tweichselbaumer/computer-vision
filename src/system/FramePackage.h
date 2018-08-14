@@ -22,6 +22,7 @@ PACK(ImuData{
 struct FramePackage
 {
 	cv::Mat image;
+	double exposureTime;
 	ImuData imu;
 };
 
