@@ -9,6 +9,33 @@ InputModule::InputModule(boost::asio::io_service& io_service, LinkUpPropertyLabe
 	pExposerLabel_ = pExposerLabel;
 }
 
+uint8_t * InputModule::onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
+{
+	*pSizeOut = 0;
+	liveTimeout_ = liveTimeout;
+	FramePackage* pFramePackage = NULL;
+
+	while (pFreeQueue_->empty())
+	{
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+	}
+	pFreeQueue_->pop(pFramePackage);
+
+	pFramePackage->imu = *((ImuData*)pDataIn);
+
+	if (pFramePackage->imu.cam)
+	{
+		memcpy(&pFramePackage->exposureTime, pDataIn + sizeof(ImuData), sizeof(double));
+		cv::Mat matImg;
+		matImg = cv::imdecode(cv::Mat(1, nSizeIn - (sizeof(ImuData) + sizeof(double)), CV_8UC1, pDataIn + sizeof(ImuData) + sizeof(double)), CV_LOAD_IMAGE_UNCHANGED);
+		memcpy(pFramePackage->image.data, matImg.data, matImg.rows*matImg.cols);
+	}
+
+	pOutQueue_->push(pFramePackage);
+
+	return 0;
+}
+
 void InputModule::start()
 {
 	for (int i = 0; i < queueSize; i++)
@@ -69,7 +96,6 @@ FramePackage* InputModule::next()
 	return pFramePackage;
 }
 
-
 void InputModule::doWorkCamera()
 {
 	while (bIsRunning_)
@@ -125,7 +151,16 @@ void InputModule::doWork()
 				pFreeQueue_->pop(pFramePackage);
 			}
 			pFramePackage->imu = *((ImuData*)packet.pData);
-			pOutQueue_->push(pFramePackage);
+			if (liveTimeout_ > 0)
+			{
+				pFreeQueue_->push(pFramePackage);
+				liveTimeout_--;
+			}
+			else
+			{
+				pOutQueue_->push(pFramePackage);
+			}
+
 			free(packet.pData);
 		}
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));

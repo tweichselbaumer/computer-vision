@@ -31,6 +31,8 @@ LinkUpEventLabel* pCameraImuEvent;
 
 LinkUpPropertyLabel_Int16* pExposureLabel;
 
+LinkUpFunctionLabel* pReceiveReplayDataLabel;
+
 TcpServer* pTcpServer;
 LinkUpNode* pLinkUpNode;
 
@@ -99,6 +101,11 @@ void linkUpWorker()
 	}
 }
 
+uint8_t* onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
+{
+	return pInputModule->onReplayData(pDataIn, nSizeIn, pSizeOut);
+}
+
 int main(int argc, char* argv[])
 {
 	try
@@ -112,6 +119,8 @@ int main(int argc, char* argv[])
 		pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
 		pExposureLabel->setValue(-1);
 
+		pReceiveReplayDataLabel = new LinkUpFunctionLabel("replay_data", pLinkUpNode);
+
 		boost::shared_ptr<boost::asio::io_service::work> work(
 			new boost::asio::io_service::work(io_service)
 		);
@@ -121,6 +130,7 @@ int main(int argc, char* argv[])
 		std::cout << "Press [return] to exit." << std::endl;
 
 		pInputModule = new InputModule(io_service, pExposureLabel);
+		pReceiveReplayDataLabel->setFunction(&onReplayData);
 
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);

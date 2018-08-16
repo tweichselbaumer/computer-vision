@@ -10,6 +10,14 @@
 #include "LinkUpRaw.h"
 #include <boost/asio.hpp>
 #include "LinkUpPropertyLabel.h"
+#include "LinkUpFunctionLabel.h"
+
+#include <opencv2/opencv.hpp>
+#include <opencv/highgui.h>
+#include <opencv2/opencv_modules.hpp>
+#include <opencv2/core/ocl.hpp>
+
+using namespace cv;
 
 class InputModule
 {
@@ -19,8 +27,10 @@ public:
 	void stop();
 	FramePackage* next();
 	void release(FramePackage* pframePackage);
+	uint8_t * onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut);
 private:
 	enum { queueSize = 1000 };
+	enum { liveTimeout = 4 * 200 };
 	void doWork();
 	void doWorkPing();
 	void doWorkCamera();
@@ -37,5 +47,6 @@ private:
 	uint8_t pBuffer_[64];
 	LinkUpRaw raw_ = { };
 	boost::asio::serial_port* pPort_;
+	int liveTimeout_ = 0;
 };
 #endif
