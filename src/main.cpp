@@ -18,6 +18,9 @@
 #include "Platform.h"
 #include "socket/TcpServer.h"
 
+#include <opencv2/aruco.hpp>
+#include <opencv2/aruco/charuco.hpp>
+
 using boost::asio::ip::tcp;
 using namespace boost::timer;
 using namespace std;
@@ -32,6 +35,7 @@ LinkUpEventLabel* pCameraImuEvent;
 LinkUpPropertyLabel_Int16* pExposureLabel;
 
 LinkUpFunctionLabel* pReceiveReplayDataLabel;
+LinkUpFunctionLabel* pGetChessboardCornerLabel;
 
 TcpServer* pTcpServer;
 LinkUpNode* pLinkUpNode;
@@ -106,6 +110,25 @@ uint8_t* onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 	return pInputModule->onReplayData(pDataIn, nSizeIn, pSizeOut);
 }
 
+uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
+{
+	uint8_t* pOut = (uint8_t*)calloc(1, sizeof(Point3f));
+
+	*pSizeOut = sizeof(Point3f);
+
+	int32_t squaresX = *((int32_t*)pDataIn);
+	int32_t squaresY = *((int32_t*)(pDataIn + 4));
+	float squareLength = *((float*)(pDataIn + 8));
+	float markerLength = *((float*)(pDataIn + 12));
+	int32_t markerId = *((int32_t*)(pDataIn + 16));
+
+cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250));
+
+	*(Point3f*)pOut = board->chessboardCorners[markerId];
+
+	return pOut;
+}
+
 int main(int argc, char* argv[])
 {
 	try
@@ -120,6 +143,7 @@ int main(int argc, char* argv[])
 		pExposureLabel->setValue(-1);
 
 		pReceiveReplayDataLabel = new LinkUpFunctionLabel("replay_data", pLinkUpNode);
+		pGetChessboardCornerLabel = new LinkUpFunctionLabel("get_chessboard_corner", pLinkUpNode);
 
 		boost::shared_ptr<boost::asio::io_service::work> work(
 			new boost::asio::io_service::work(io_service)
@@ -131,6 +155,7 @@ int main(int argc, char* argv[])
 
 		pInputModule = new InputModule(io_service, pExposureLabel);
 		pReceiveReplayDataLabel->setFunction(&onReplayData);
+		pGetChessboardCornerLabel->setFunction(&onChessboardCorner);
 
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);
