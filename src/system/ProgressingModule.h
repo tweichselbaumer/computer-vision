@@ -1,0 +1,27 @@
+#ifndef _PROGRESSING_MODULE_h
+#define _PROGRESSING_MODULE_h
+
+#include "InputModule.h"
+#include "OutputModule.h"
+
+#include <boost/thread.hpp>
+
+class ProgressingModule
+{
+public:
+	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer);
+	void start();
+	void stop();
+private:
+	boost::thread thread_;
+
+	void doWork();
+
+	bool bIsRunning_ = false;
+
+	InputModule* pInputModule_ = 0;
+	OutputModule* pOutputModule_ = 0;
+	LinkUpLabelContainer* pLinkUpLabelContainer_;
+};
+
+#endif

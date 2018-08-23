@@ -1,16 +1,21 @@
 #ifndef _INPUT_MODULE
 #define _INPUT_MODULE
 
-#include "../camera/Camera.h"
 #include "FramePackage.h"
+
+#include "../camera/Camera.h"
+#include "../camera/uEyeCamera.h"
+
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
-#include "../camera/uEyeCamera.h"
 #include <boost/asio/serial_port.hpp>
-#include "LinkUpRaw.h"
 #include <boost/asio.hpp>
+
+#include "LinkUpRaw.h"
 #include "LinkUpPropertyLabel.h"
 #include "LinkUpFunctionLabel.h"
+
+#include "LinkUpLabelContainer.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
@@ -22,7 +27,7 @@ using namespace cv;
 class InputModule
 {
 public:
-	InputModule(boost::asio::io_service& io_service, LinkUpPropertyLabel_Int16* pExposerLabel);
+	InputModule(boost::asio::io_service& io_service, LinkUpLabelContainer* pLinkUpLabelContainer);
 	void start();
 	void stop();
 	FramePackage* next();
@@ -31,22 +36,27 @@ public:
 private:
 	enum { queueSize = 1000 };
 	enum { liveTimeout = 4 * 200 };
+
 	void doWork();
 	void doWorkPing();
 	void doWorkCamera();
+
 	boost::lockfree::queue<FramePackage*>* pOutQueue_;
 	boost::lockfree::queue<FramePackage*>* pFreeQueue_;
 	boost::lockfree::queue<FramePackage*>* pCameraQueue_;
 	boost::thread thread_;
 	boost::thread threadPing_;
 	boost::thread cameraThread_;
+	boost::asio::serial_port* pPort_;
+
 	bool bIsRunning_ = false;
+	int liveTimeout_ = 0;
+
 	Camera* pCamera_ = new uEyeCamera();
-	LinkUpPropertyLabel_Int16* pExposerLabel_;
+
+	LinkUpLabelContainer* pLinkUpLabelContainer_;
+	LinkUpRaw raw_ = {};
 
 	uint8_t pBuffer_[64];
-	LinkUpRaw raw_ = { };
-	boost::asio::serial_port* pPort_;
-	int liveTimeout_ = 0;
 };
 #endif
