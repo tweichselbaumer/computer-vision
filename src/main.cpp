@@ -71,8 +71,9 @@ uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeO
 	float squareLength = *((float*)(pDataIn + 8));
 	float markerLength = *((float*)(pDataIn + 12));
 	int32_t markerId = *((int32_t*)(pDataIn + 16));
+	int32_t dictionary = *((int32_t*)(pDataIn + 20));
 
-cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50));
+cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, cv::aruco::getPredefinedDictionary(dictionary));
 
 	*(Point3f*)pOut = board->chessboardCorners[markerId];
 
