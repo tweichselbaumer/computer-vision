@@ -80,6 +80,22 @@ cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX
 	return pOut;
 }
 
+void loadSettings()
+{
+	//TODO:
+	linkUpLabelContainer.pExposureLabel->setValue(-1);
+
+	linkUpLabelContainer.pAccelerometerScaleLabel->setValue(2048 / 9.80665);
+	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(16.4);
+	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(21);
+	linkUpLabelContainer.pTemperatureScaleLabel->setValue(333.8);
+}
+
+void updateSettings()
+{
+	//TODO:
+}
+
 int main(int argc, char* argv[])
 {
 	try
@@ -91,10 +107,16 @@ int main(int argc, char* argv[])
 		linkUpLabelContainer.pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
 
 		linkUpLabelContainer.pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
-		linkUpLabelContainer.pExposureLabel->setValue(-1);
+
+		linkUpLabelContainer.pAccelerometerScaleLabel = new LinkUpPropertyLabel_Double("acc_scale", pLinkUpNode);
+		linkUpLabelContainer.pGyroscopeScaleLabel = new LinkUpPropertyLabel_Double("gyro_scale", pLinkUpNode);
+		linkUpLabelContainer.pTemperatureScaleLabel = new LinkUpPropertyLabel_Double("temp_scale", pLinkUpNode);
+		linkUpLabelContainer.pTemperatureOffsetLabel = new LinkUpPropertyLabel_Double("temp_offset", pLinkUpNode);
 
 		linkUpLabelContainer.pReceiveReplayDataLabel = new LinkUpFunctionLabel("replay_data", pLinkUpNode);
 		linkUpLabelContainer.pGetChessboardCornerLabel = new LinkUpFunctionLabel("get_chessboard_corner", pLinkUpNode);
+
+		loadSettings();
 
 		boost::shared_ptr<boost::asio::io_service::work> work(
 			new boost::asio::io_service::work(io_service)

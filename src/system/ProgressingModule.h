@@ -16,6 +16,7 @@ private:
 	boost::thread thread_;
 
 	void doWork();
+	ImuData convertImu(RawImuData imuData);
 
 	bool bIsRunning_ = false;
 

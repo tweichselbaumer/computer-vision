@@ -21,13 +21,13 @@ uint8_t * InputModule::onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t
 	}
 	pFreeQueue_->pop(pFramePackage);
 
-	pFramePackage->imu = *((ImuData*)pDataIn);
+	pFramePackage->imu = *((RawImuData*)pDataIn);
 
 	if (pFramePackage->imu.cam)
 	{
-		memcpy(&pFramePackage->exposureTime, pDataIn + sizeof(ImuData), sizeof(double));
+		memcpy(&pFramePackage->exposureTime, pDataIn + sizeof(RawImuData), sizeof(double));
 		cv::Mat matImg;
-		matImg = cv::imdecode(cv::Mat(1, nSizeIn - (sizeof(ImuData) + sizeof(double)), CV_8UC1, pDataIn + sizeof(ImuData) + sizeof(double)), CV_LOAD_IMAGE_UNCHANGED);
+		matImg = cv::imdecode(cv::Mat(1, nSizeIn - (sizeof(RawImuData) + sizeof(double)), CV_8UC1, pDataIn + sizeof(RawImuData) + sizeof(double)), CV_LOAD_IMAGE_UNCHANGED);
 		memcpy(pFramePackage->image.data, matImg.data, matImg.rows*matImg.cols);
 	}
 
@@ -123,7 +123,7 @@ void InputModule::doWork()
 		{
 			LinkUpPacket packet = raw_.next();
 			FramePackage* pFramePackage = NULL;
-			if (((ImuData*)packet.pData)->cam)
+			if (((RawImuData*)packet.pData)->cam)
 			{
 				if (pCameraQueue_->empty())
 				{
@@ -150,7 +150,7 @@ void InputModule::doWork()
 				}
 				pFreeQueue_->pop(pFramePackage);
 			}
-			pFramePackage->imu = *((ImuData*)packet.pData);
+			pFramePackage->imu = *((RawImuData*)packet.pData);
 			if (liveTimeout_ > 0)
 			{
 				pFreeQueue_->push(pFramePackage);

@@ -39,3 +39,16 @@ target_link_libraries(computer-vision ${OpenCV_LIBS})
 target_link_libraries(computer-vision ${Boost_LIBRARIES})
 target_link_libraries(computer-vision ${UEye_LIBRARIES})
 
+IF (WIN32)
+
+ELSE()
+
+add_custom_command(
+    TARGET computer-vision 
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+       ${PROJECT_SOURCE_DIR}/bin/computer-vision
+        /opt/firefly
+)
+
+ENDIF()

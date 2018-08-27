@@ -6,7 +6,7 @@
 #include <opencv2/opencv_modules.hpp>
 #include "Platform.h"
 
-PACK(ImuData{
+PACK(RawImuData{
 	uint32_t timestamp_ms;
 	uint32_t timestamp_us;
 	int16_t gx;
@@ -17,13 +17,13 @@ PACK(ImuData{
 	int16_t az;
 	int16_t temperature;
 	bool cam;
-};)
+	};)
 
-struct FramePackage
-{
-	cv::Mat image;
-	double exposureTime;
-	ImuData imu;
-};
+	struct FramePackage
+	{
+		cv::Mat image;
+		double exposureTime;
+		RawImuData imu;
+	};
 
 #endif

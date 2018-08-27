@@ -7,6 +7,8 @@
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
 
+#include "../io/CSVWritter.h"
+
 class OutputModule
 {
 public:
@@ -28,6 +30,7 @@ private:
 
 	InputModule* pInputModule_ = 0;
 	LinkUpLabelContainer* pLinkUpLabelContainer_;
+	CSVWritter* pCSVWritter_;
 };
 
 #endif

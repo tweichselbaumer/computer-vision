@@ -6,10 +6,12 @@ OutputModule::OutputModule(InputModule* pInputModule, LinkUpLabelContainer* pLin
 	pInQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInputModule_ = pInputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
+	pCSVWritter_ = new CSVWritter({ "time", "gx", "gy", "gz", "ax", "ay", "az", "temperature" }, "/home/up/data/imu.csv");
 }
 
 void OutputModule::start()
 {
+	pCSVWritter_->open();
 	for (int i = 0; i < queueSize; i++)
 	{
 		OutputPackage* pOutputPackage = (OutputPackage*)calloc(1, sizeof(OutputPackage));
@@ -25,6 +27,7 @@ void OutputModule::stop()
 {
 	bIsRunning_ = false;
 	thread_.join();
+	pCSVWritter_->close();
 }
 
 void OutputModule::writeOut(OutputPackage* pResult)
@@ -70,7 +73,7 @@ void OutputModule::doWork()
 		}
 		if (pLinkUpLabelContainer_->pImuEvent->isSubscribed)
 		{
-			pLinkUpLabelContainer_->pImuEvent->fireEvent((uint8_t*)&(pOutputPackage->pFramePackage->imu), sizeof(ImuData));
+			pLinkUpLabelContainer_->pImuEvent->fireEvent((uint8_t*)&(pOutputPackage->pFramePackage->imu), sizeof(RawImuData));
 		}
 		if (pLinkUpLabelContainer_->pCameraImuEvent->isSubscribed)
 		{
@@ -79,17 +82,20 @@ void OutputModule::doWork()
 				std::vector<uchar> buf;
 
 				imencode(".bmp", pOutputPackage->pFramePackage->image, buf, compression_params);
-				uint8_t pTemp[buf.size() + sizeof(ImuData) + sizeof(double)];
-				memcpy(pTemp + sizeof(ImuData), &pOutputPackage->pFramePackage->exposureTime, sizeof(double));
-				memcpy(pTemp + sizeof(ImuData) + sizeof(double), (uint8_t*)&buf[0], buf.size());
-				*(ImuData*)pTemp = pOutputPackage->pFramePackage->imu;
-				pLinkUpLabelContainer_->pCameraImuEvent->fireEvent(pTemp, buf.size() + sizeof(ImuData) + sizeof(double));
+				uint8_t pTemp[buf.size() + sizeof(RawImuData) + sizeof(double)];
+				memcpy(pTemp + sizeof(RawImuData), &pOutputPackage->pFramePackage->exposureTime, sizeof(double));
+				memcpy(pTemp + sizeof(RawImuData) + sizeof(double), (uint8_t*)&buf[0], buf.size());
+				*(RawImuData*)pTemp = pOutputPackage->pFramePackage->imu;
+				pLinkUpLabelContainer_->pCameraImuEvent->fireEvent(pTemp, buf.size() + sizeof(RawImuData) + sizeof(double));
 			}
 			else
 			{
-				pLinkUpLabelContainer_->pCameraImuEvent->fireEvent((uint8_t*)&(pOutputPackage->pFramePackage->imu), sizeof(ImuData));
+				pLinkUpLabelContainer_->pCameraImuEvent->fireEvent((uint8_t*)&(pOutputPackage->pFramePackage->imu), sizeof(RawImuData));
 			}
 		}
+
+		pCSVWritter_->writeValues((double*)&(pOutputPackage->imuData), 8);
+
 		pInputModule_->release(pOutputPackage->pFramePackage);
 		pFreeQueue_->push(pOutputPackage);
 	}
