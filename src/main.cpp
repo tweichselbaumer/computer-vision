@@ -23,6 +23,8 @@
 #include "Platform.h"
 #include "socket/TcpServer.h"
 
+#include "io/Settings.h"
+
 using boost::asio::ip::tcp;
 using namespace boost::timer;
 using namespace std;
@@ -38,6 +40,8 @@ LinkUpLabelContainer linkUpLabelContainer = {};
 InputModule* pInputModule;
 ProgressingModule* pProgressingModule;
 OutputModule* pOutputModule;
+
+Settings* pSettings;
 
 bool running = true;
 
@@ -82,6 +86,7 @@ cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX
 
 void loadSettings()
 {
+	pSettings->load();
 	//TODO:
 	linkUpLabelContainer.pExposureLabel->setValue(-1);
 
@@ -94,12 +99,14 @@ void loadSettings()
 void updateSettings()
 {
 	//TODO:
+	pSettings->save();
 }
 
 int main(int argc, char* argv[])
 {
 	try
 	{
+		pSettings = new Settings("./config.json");
 		pLinkUpNode = new LinkUpNode("computer_vision");
 
 		linkUpLabelContainer.pCameraEvent = new  LinkUpEventLabel("camera_event", pLinkUpNode);
