@@ -13,6 +13,7 @@ struct LinkUpLabelContainer
 
 	LinkUpFunctionLabel* pReceiveReplayDataLabel;
 	LinkUpFunctionLabel* pGetChessboardCornerLabel;
+	LinkUpFunctionLabel* pUpdateSettingsLabel;
 
 	LinkUpPropertyLabel_Double* pAccelerometerScaleLabel;
 	LinkUpPropertyLabel_Double* pGyroscopeScaleLabel;

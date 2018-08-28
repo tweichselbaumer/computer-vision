@@ -19,9 +19,12 @@ public:
 	Settings(string filename);
 	void load();
 	void save();
-	struct imu_parameter {
-		double acc_scale;
-	};
+	struct {
+		double accelerometer_scale;
+		double gyroscope_scale;
+		double temperature_scale;
+		double temperature_offset;
+	}imu_parameter;
 private:
 	string filename_;
 };

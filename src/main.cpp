@@ -59,9 +59,43 @@ void linkUpWorker()
 	}
 }
 
+
+void loadSettings()
+{
+	pSettings->load();
+	//TODO:
+	linkUpLabelContainer.pExposureLabel->setValue(-1);
+
+	linkUpLabelContainer.pAccelerometerScaleLabel->setValue(pSettings->imu_parameter.accelerometer_scale);
+	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(pSettings->imu_parameter.gyroscope_scale);
+	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(pSettings->imu_parameter.temperature_offset);
+	linkUpLabelContainer.pTemperatureScaleLabel->setValue(pSettings->imu_parameter.temperature_scale);
+}
+
+void updateSettings()
+{
+	//TODO:
+
+	pSettings->imu_parameter.accelerometer_scale = linkUpLabelContainer.pAccelerometerScaleLabel->getValue();
+	pSettings->imu_parameter.gyroscope_scale = linkUpLabelContainer.pGyroscopeScaleLabel->getValue();
+	pSettings->imu_parameter.temperature_scale = linkUpLabelContainer.pTemperatureScaleLabel->getValue();
+	pSettings->imu_parameter.temperature_offset = linkUpLabelContainer.pTemperatureOffsetLabel->getValue();
+
+	pSettings->save();
+}
+
 uint8_t* onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 {
 	return pInputModule->onReplayData(pDataIn, nSizeIn, pSizeOut);
+}
+
+uint8_t* onUpdateSettings(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
+{
+	uint8_t* pOut = 0;
+
+	updateSettings();
+
+	return NULL;
 }
 
 uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
@@ -84,29 +118,11 @@ cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX
 	return pOut;
 }
 
-void loadSettings()
-{
-	pSettings->load();
-	//TODO:
-	linkUpLabelContainer.pExposureLabel->setValue(-1);
-
-	linkUpLabelContainer.pAccelerometerScaleLabel->setValue(2048 / 9.80665);
-	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(16.4);
-	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(21);
-	linkUpLabelContainer.pTemperatureScaleLabel->setValue(333.8);
-}
-
-void updateSettings()
-{
-	//TODO:
-	pSettings->save();
-}
-
 int main(int argc, char* argv[])
 {
 	try
 	{
-		pSettings = new Settings("./config.json");
+		pSettings = new Settings("/opt/firefly/config.json");
 		pLinkUpNode = new LinkUpNode("computer_vision");
 
 		linkUpLabelContainer.pCameraEvent = new  LinkUpEventLabel("camera_event", pLinkUpNode);
@@ -122,6 +138,7 @@ int main(int argc, char* argv[])
 
 		linkUpLabelContainer.pReceiveReplayDataLabel = new LinkUpFunctionLabel("replay_data", pLinkUpNode);
 		linkUpLabelContainer.pGetChessboardCornerLabel = new LinkUpFunctionLabel("get_chessboard_corner", pLinkUpNode);
+		linkUpLabelContainer.pUpdateSettingsLabel = new LinkUpFunctionLabel("update_settings", pLinkUpNode);
 
 		loadSettings();
 
@@ -139,6 +156,7 @@ int main(int argc, char* argv[])
 
 		linkUpLabelContainer.pReceiveReplayDataLabel->setFunction(&onReplayData);
 		linkUpLabelContainer.pGetChessboardCornerLabel->setFunction(&onChessboardCorner);
+		linkUpLabelContainer.pUpdateSettingsLabel->setFunction(&onUpdateSettings);
 
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);
@@ -149,6 +167,8 @@ int main(int argc, char* argv[])
 		pProgressingModule->start();
 
 		std::cin.get();
+
+		updateSettings();
 
 		running = false;
 		io_service.stop();

@@ -26,7 +26,7 @@ find_package(OpenCV REQUIRED)
 message("OpenCV Version: "${OpenCV_VERSION})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost REQUIRED COMPONENTS system thread filesystem)
 include_directories(${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
