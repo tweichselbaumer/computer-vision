@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -14,7 +15,7 @@ class CSVWritter
 {
 public:
 	CSVWritter(vector<string> headers, string filename);
-	void writeValues(double* pValues, uint16_t nSize);
+	void writeValues(long timestamp, double* pValues, uint16_t nSize);
 	void open();
 	void close();
 private:

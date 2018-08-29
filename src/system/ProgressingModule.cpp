@@ -25,7 +25,7 @@ ImuData ProgressingModule::convertImu(RawImuData raw)
 
 	int multi = (int)(raw.timestamp_ms / ((pow(2, 32)) / 1000));
 
-	result.timestamp = (raw.timestamp_us + multi * pow(2, 32)) / (1000 * 1000);
+	result.timestamp = (raw.timestamp_us + multi * pow(2, 32)) * 1000;
 
 	result.gx = raw.gx / pLinkUpLabelContainer_->pGyroscopeScaleLabel->getValue();
 	result.gy = raw.gy / pLinkUpLabelContainer_->pGyroscopeScaleLabel->getValue();

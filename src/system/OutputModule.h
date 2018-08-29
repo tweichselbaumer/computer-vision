@@ -6,8 +6,12 @@
 
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
+#include <boost/format.hpp>
+
+#include <sstream>
 
 #include "../io/CSVWritter.h"
+#include <time.h> 
 
 class OutputModule
 {
@@ -27,6 +31,9 @@ private:
 	void doWork();
 
 	bool bIsRunning_ = false;
+	bool bIsRecording_ = false;
+
+	void startRecording();
 
 	InputModule* pInputModule_ = 0;
 	LinkUpLabelContainer* pLinkUpLabelContainer_;

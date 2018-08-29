@@ -27,7 +27,11 @@ void Settings::load()
 		}
 		if (j["imu_parameter"]["temperature_offset"].is_number())
 		{
-			imu_parameter.accelerometer_scale = j["imu_parameter"]["temperature_offset"].get<double>();
+			imu_parameter.temperature_offset = j["imu_parameter"]["temperature_offset"].get<double>();
+		}
+		if (j["record_remote"].is_boolean())
+		{
+			recordRemote = j["record_remote"].get<bool>();
 		}
 	}
 }
@@ -42,6 +46,7 @@ void Settings::save()
 	j["imu_parameter"]["gyroscope_scale"] = imu_parameter.gyroscope_scale;
 	j["imu_parameter"]["temperature_scale"] = imu_parameter.temperature_scale;
 	j["imu_parameter"]["temperature_offset"] = imu_parameter.temperature_offset;
+	j["record_remote"] = recordRemote;
 
 	o << j << std::endl;
 }

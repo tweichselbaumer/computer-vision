@@ -6,12 +6,21 @@ OutputModule::OutputModule(InputModule* pInputModule, LinkUpLabelContainer* pLin
 	pInQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInputModule_ = pInputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
-	pCSVWritter_ = new CSVWritter({ "time", "gx", "gy", "gz", "ax", "ay", "az", "temperature" }, "/home/up/data/imu.csv");
+}
+
+void OutputModule::startRecording()
+{
+	time_t now;
+	time(&now);
+
+	string filename = str((boost::format("/home/up/data/imu_%d.csv") % (int)now));
+
+	pCSVWritter_ = new CSVWritter({ "time", "gx", "gy", "gz", "ax", "ay", "az", "temperature" }, filename);
+	pCSVWritter_->open();
 }
 
 void OutputModule::start()
 {
-	pCSVWritter_->open();
 	for (int i = 0; i < queueSize; i++)
 	{
 		OutputPackage* pOutputPackage = (OutputPackage*)calloc(1, sizeof(OutputPackage));
@@ -94,7 +103,21 @@ void OutputModule::doWork()
 			}
 		}
 
-		pCSVWritter_->writeValues((double*)&(pOutputPackage->imuData), 8);
+		bool temp = pLinkUpLabelContainer_->pRecodRemoteLabel->getValue();
+
+		if (temp && !bIsRecording_)
+		{
+			bIsRecording_ = true;
+			startRecording();
+		}
+		else if (!temp && bIsRecording_)
+		{
+			pCSVWritter_->close();
+			bIsRecording_ = false;
+		}
+
+		if (bIsRecording_)
+			pCSVWritter_->writeValues(pOutputPackage->imuData.timestamp, (double*)&(pOutputPackage->imuData) + 1, 7);
 
 		pInputModule_->release(pOutputPackage->pFramePackage);
 		pFreeQueue_->push(pOutputPackage);

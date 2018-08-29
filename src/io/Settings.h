@@ -25,6 +25,7 @@ public:
 		double temperature_scale;
 		double temperature_offset;
 	}imu_parameter;
+	bool recordRemote;
 private:
 	string filename_;
 };

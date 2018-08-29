@@ -10,6 +10,7 @@ struct LinkUpLabelContainer
 	LinkUpEventLabel* pCameraImuEvent;
 
 	LinkUpPropertyLabel_Int16* pExposureLabel;
+	LinkUpPropertyLabel_Boolean* pRecodRemoteLabel;
 
 	LinkUpFunctionLabel* pReceiveReplayDataLabel;
 	LinkUpFunctionLabel* pGetChessboardCornerLabel;

@@ -5,7 +5,7 @@
 
 struct ImuData
 {
-	double timestamp;
+	long timestamp;
 	double gx;
 	double gy;
 	double gz;

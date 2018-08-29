@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <unistd.h>
 
 #include <boost/asio.hpp>
 #include <boost/timer/timer.hpp>
@@ -24,6 +25,7 @@
 #include "socket/TcpServer.h"
 
 #include "io/Settings.h"
+
 
 using boost::asio::ip::tcp;
 using namespace boost::timer;
@@ -63,8 +65,9 @@ void linkUpWorker()
 void loadSettings()
 {
 	pSettings->load();
-	//TODO:
 	linkUpLabelContainer.pExposureLabel->setValue(-1);
+
+	linkUpLabelContainer.pRecodRemoteLabel->setValue(pSettings->recordRemote);
 
 	linkUpLabelContainer.pAccelerometerScaleLabel->setValue(pSettings->imu_parameter.accelerometer_scale);
 	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(pSettings->imu_parameter.gyroscope_scale);
@@ -74,7 +77,7 @@ void loadSettings()
 
 void updateSettings()
 {
-	//TODO:
+	pSettings->recordRemote = linkUpLabelContainer.pRecodRemoteLabel->getValue();
 
 	pSettings->imu_parameter.accelerometer_scale = linkUpLabelContainer.pAccelerometerScaleLabel->getValue();
 	pSettings->imu_parameter.gyroscope_scale = linkUpLabelContainer.pGyroscopeScaleLabel->getValue();
@@ -130,6 +133,7 @@ int main(int argc, char* argv[])
 		linkUpLabelContainer.pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
 
 		linkUpLabelContainer.pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
+		linkUpLabelContainer.pRecodRemoteLabel = new LinkUpPropertyLabel_Boolean("record_remote", pLinkUpNode);
 
 		linkUpLabelContainer.pAccelerometerScaleLabel = new LinkUpPropertyLabel_Double("acc_scale", pLinkUpNode);
 		linkUpLabelContainer.pGyroscopeScaleLabel = new LinkUpPropertyLabel_Double("gyro_scale", pLinkUpNode);
@@ -166,6 +170,11 @@ int main(int argc, char* argv[])
 		pOutputModule->start();
 		pProgressingModule->start();
 
+		if (!isatty(fileno(stdin)))
+		{
+			while (true)
+				boost::this_thread::sleep_for(boost::chrono::seconds(1));
+		}
 		std::cin.get();
 
 		updateSettings();

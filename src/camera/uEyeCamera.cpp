@@ -23,7 +23,7 @@ uint8_t uEyeCamera::open()
 	}
 
 	IS_RECT rectAOI;
-	rectAOI.s32X = 64;
+	rectAOI.s32X = 72;
 	rectAOI.s32Y = 0;
 	rectAOI.s32Width = getWidth();
 	rectAOI.s32Height = getHeight();

@@ -6,11 +6,13 @@ CSVWritter::CSVWritter(vector<string> headers, string filename)
 	filename_ = filename;
 }
 
-void CSVWritter::writeValues(double* pValues, uint16_t nSize)
+void CSVWritter::writeValues(long timestamp, double* pValues, uint16_t nSize)
 {
+	file_ << timestamp;
+	file_ << ", ";
 	for (int i = 0; i < nSize; i++)
 	{
-		file_ << pValues[i];
+		file_ << std::setprecision(15) << pValues[i];
 		if (i < nSize - 1)
 		{
 			file_ << ", ";
