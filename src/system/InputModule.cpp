@@ -45,14 +45,17 @@ void InputModule::start()
 		pFreeQueue_->push(pframePackage);
 	}
 
+#ifdef __linux
 	pPort_->open("/dev/ttyS4");
 	pPort_->set_option(boost::asio::serial_port_base::baud_rate(115200));
 
 	pCamera_->open();
+
 	bIsRunning_ = true;
 	thread_ = boost::thread(boost::bind(&InputModule::doWork, this));
 	threadPing_ = boost::thread(boost::bind(&InputModule::doWorkPing, this));
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
+#endif
 }
 
 void InputModule::doWorkPing()

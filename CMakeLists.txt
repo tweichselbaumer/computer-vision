@@ -17,8 +17,12 @@ file(GLOB_RECURSE cv_SOURCE_FILES "${PROJECT_SOURCE_DIR}/src"
     "*.cpp"
 )
 
+add_definitions(-DWIN32_LEAN_AND_MEAN)
 add_definitions(-DLINKUP_BOOST_THREADSAFE)
 add_definitions(-DLINKUP_BOOST_CRC16)
+add_definitions(-DLINKUP_DEBUG)
+#add_definitions(-DLINKUP_DEBUG_DETAIL)
+
 
 add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LinkUp)
 

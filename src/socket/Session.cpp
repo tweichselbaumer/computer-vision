@@ -24,6 +24,17 @@ void Session::read()
 	{
 		if (ec == 0)
 		{
+#ifdef LINKUP_DEBUG_DETAIL
+			if (length > 0) {
+				for (int j = 0; j < length; j++) {
+					cout.setf(ios::hex, ios::basefield);
+					std::cout << "0x" << (int)dataIn_[j] << " ";
+					dataIn_[j] == 0;
+					cout.unsetf(ios::hex);
+				}
+				std::cout << std::endl;
+			}
+#endif
 			node_->progress(dataIn_, length, 0, true);
 			if (length == 0)
 			{
@@ -31,7 +42,8 @@ void Session::read()
 			}
 			read();
 		}
-		else {
+		else
+		{
 			server_->removeSession(this);
 			return;
 		}
@@ -76,7 +88,7 @@ void Session::write()
 		{
 			if (ec == 0)
 			{
-				start();
+				write();
 			}
 			else
 			{

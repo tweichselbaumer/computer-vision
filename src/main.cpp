@@ -5,12 +5,7 @@
 #include <opencv2/aruco.hpp>
 #include <opencv2/aruco/charuco.hpp>
 
-#include <cstdlib>
-#include <iostream>
-#include <memory>
-#include <utility>
-#include <unistd.h>
-
+#include <winsock2.h>
 #include <boost/asio.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/thread.hpp>
@@ -25,6 +20,15 @@
 #include "socket/TcpServer.h"
 
 #include "io/Settings.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <utility>
+
+#ifdef __linux
+#include <unistd.h>
+#endif
 
 
 using boost::asio::ip::tcp;
@@ -56,7 +60,6 @@ void linkUpWorker()
 {
 	while (running) {
 		pLinkUpNode->progress(0, 0, 100, false);
-		pLinkUpNode->progress(0, 0, 100, true);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 }
@@ -94,10 +97,8 @@ uint8_t* onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 
 uint8_t* onUpdateSettings(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 {
-	uint8_t* pOut = 0;
-
+	*pSizeOut = 0;
 	updateSettings();
-
 	return NULL;
 }
 
@@ -170,11 +171,13 @@ int main(int argc, char* argv[])
 		pOutputModule->start();
 		pProgressingModule->start();
 
+#ifdef __linux
 		if (!isatty(fileno(stdin)))
 		{
 			while (true)
 				boost::this_thread::sleep_for(boost::chrono::seconds(1));
 		}
+#endif
 		std::cin.get();
 
 		updateSettings();
