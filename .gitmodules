@@ -1,0 +1,3 @@
+[submodule "thirdParty/dso"]
+	path = thirdParty/dso
+	url = https://github.com/tweichselbaumer/dso
