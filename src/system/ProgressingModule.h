@@ -4,6 +4,11 @@
 #include "InputModule.h"
 #include "OutputModule.h"
 
+#include "util/settings.h"
+#include "FullSystem/FullSystem.h"
+#include "util/Undistort.h"
+#include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
+
 #include <boost/thread.hpp>
 
 class ProgressingModule

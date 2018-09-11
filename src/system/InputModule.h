@@ -22,8 +22,6 @@
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/core/ocl.hpp>
 
-using namespace cv;
-
 class InputModule
 {
 public:

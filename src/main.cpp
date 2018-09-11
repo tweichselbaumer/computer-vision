@@ -34,7 +34,6 @@
 using boost::asio::ip::tcp;
 using namespace boost::timer;
 using namespace std;
-using namespace cv;
 
 boost::asio::io_service io_service;
 
@@ -104,9 +103,9 @@ uint8_t* onUpdateSettings(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut
 
 uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 {
-	uint8_t* pOut = (uint8_t*)calloc(1, sizeof(Point3f));
+	uint8_t* pOut = (uint8_t*)calloc(1, sizeof(cv::Point3f));
 
-	*pSizeOut = sizeof(Point3f);
+	*pSizeOut = sizeof(cv::Point3f);
 
 	int32_t squaresX = *((int32_t*)pDataIn);
 	int32_t squaresY = *((int32_t*)(pDataIn + 4));
@@ -115,9 +114,9 @@ uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeO
 	int32_t markerId = *((int32_t*)(pDataIn + 16));
 	int32_t dictionary = *((int32_t*)(pDataIn + 20));
 
-cv:Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, cv::aruco::getPredefinedDictionary(dictionary));
+	cv::Ptr<cv::aruco::CharucoBoard> board = cv::aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, cv::aruco::getPredefinedDictionary(dictionary));
 
-	*(Point3f*)pOut = board->chessboardCorners[markerId];
+	*(cv::Point3f*)pOut = board->chessboardCorners[markerId];
 
 	return pOut;
 }
