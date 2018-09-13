@@ -22,7 +22,7 @@ public:
 	void writeOut(OutputPackage* pResult);
 	OutputPackage* nextFreeOutputPackage();
 private:
-	enum { queueSize = 1000 };
+	enum { queueSize = 200};
 
 	boost::thread thread_;
 	boost::lockfree::queue<OutputPackage*>* pInQueue_;

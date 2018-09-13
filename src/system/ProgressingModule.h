@@ -4,10 +4,12 @@
 #include "InputModule.h"
 #include "OutputModule.h"
 
-#include "util/settings.h"
-#include "FullSystem/FullSystem.h"
-#include "util/Undistort.h"
-#include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
+#ifdef WITH_DSO
+	#include "util/settings.h"
+	#include "FullSystem/FullSystem.h"
+	#include "util/Undistort.h"
+	#include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
+#endif //WITH_DSO
 
 #include <boost/thread.hpp>
 
@@ -30,4 +32,4 @@ private:
 	LinkUpLabelContainer* pLinkUpLabelContainer_;
 };
 
-#endif
+#endif //_PROGRESSING_MODULE_h

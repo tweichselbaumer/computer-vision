@@ -21,6 +21,10 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 	"${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
+set(WITH_DSO 0)
+set(WITH_CAMERA 1)
+set(WITH_EXTERN_TRIGGER 0)
+
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 add_definitions(-DLINKUP_BOOST_THREADSAFE)
 add_definitions(-DLINKUP_BOOST_CRC16)
@@ -29,17 +33,24 @@ add_definitions(-D_USE_MATH_DEFINES)
 #add_definitions(-DLINKUP_DEBUG_DETAIL)
 add_definitions("-D__SSE3__")
 
+if (WITH_EXTERN_TRIGGER)
+	message("--- extern camera trigger")
+	add_definitions("-DEXTERN_CAMERA_TRIGGER")
+else ()
+	message("--- intern camera trigger")
+endif ()
+
+if (WITH_CAMERA)
+	message("--- camera enabled")
+	add_definitions("-DWITH_CAMERA")
+else ()
+	message("--- camera disabled")
+endif ()
+
+
 find_package(Eigen3 REQUIRED)
 
 add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LinkUp)
-add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/dso)
-
-
-include_directories(
-  ${PROJECT_SOURCE_DIR}/thirdParty/dso/src
-  ${PROJECT_SOURCE_DIR}/thirdParty/dso/thirdparty/Sophus
-  ${EIGEN3_INCLUDE_DIR}
-)  
 
 find_package(OpenCV REQUIRED)
 message("OpenCV Version: ${OpenCV_VERSION}")
@@ -54,9 +65,25 @@ include_directories(${UEye_INCLUDE_DIRS})
 
 message("Files: ${cv_SOURCE_FILES}")
 
+if (WITH_DSO)
+	message("--- dso is aktiv")
+
+	add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/dso)
+
+	include_directories(
+	  ${PROJECT_SOURCE_DIR}/thirdParty/dso/src
+	  ${PROJECT_SOURCE_DIR}/thirdParty/dso/thirdparty/Sophus
+	  ${EIGEN3_INCLUDE_DIR}
+	)  
+
+	add_definitions(-DWITH_DSO)
+	target_link_libraries (computer-vision dso)
+else ()
+	message("--- dso is inaktiv")
+endif ()
+
 add_executable(computer-vision ${cv_SOURCE_FILES})
 target_link_libraries (computer-vision LinkUp)
-target_link_libraries (computer-vision dso)
 target_link_libraries(computer-vision ${OpenCV_LIBS})
 target_link_libraries(computer-vision ${Boost_LIBRARIES})
 target_link_libraries(computer-vision ${UEye_LIBRARIES})

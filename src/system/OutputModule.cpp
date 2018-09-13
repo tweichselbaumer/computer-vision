@@ -74,10 +74,11 @@ void OutputModule::doWork()
 			if (pLinkUpLabelContainer_->pCameraEvent->isSubscribed)
 			{
 				imencode(".bmp", pOutputPackage->pFramePackage->image, buf, compression_params);
-				uint8_t* pTemp = new uint8_t[buf.size() + sizeof(double)];
+				uint8_t* pTemp = (uint8_t*)calloc(buf.size() + sizeof(double), sizeof(uint8_t));
 				memcpy(pTemp, &pOutputPackage->pFramePackage->exposureTime, sizeof(double));
 				memcpy(pTemp + sizeof(double), (uint8_t*)&buf[0], buf.size());
 				pLinkUpLabelContainer_->pCameraEvent->fireEvent(pTemp, buf.size() + sizeof(double));
+				free(pTemp);
 			}
 		}
 		if (pLinkUpLabelContainer_->pImuEvent->isSubscribed)
@@ -91,11 +92,12 @@ void OutputModule::doWork()
 				std::vector<uchar> buf;
 
 				imencode(".bmp", pOutputPackage->pFramePackage->image, buf, compression_params);
-				uint8_t* pTemp = new uint8_t[buf.size() + sizeof(RawImuData) + sizeof(double)];
+				uint8_t* pTemp = (uint8_t*)calloc(buf.size() + sizeof(RawImuData) + sizeof(double), sizeof(uint8_t));
 				memcpy(pTemp + sizeof(RawImuData), &pOutputPackage->pFramePackage->exposureTime, sizeof(double));
 				memcpy(pTemp + sizeof(RawImuData) + sizeof(double), (uint8_t*)&buf[0], buf.size());
 				*((RawImuData*)pTemp) = pOutputPackage->pFramePackage->imu;
 				pLinkUpLabelContainer_->pCameraImuEvent->fireEvent(pTemp, buf.size() + sizeof(RawImuData) + sizeof(double));
+				free(pTemp);
 			}
 			else
 			{

@@ -45,17 +45,19 @@ void InputModule::start()
 		pFreeQueue_->push(pframePackage);
 	}
 
-#ifdef __linux
+#ifdef EXTERN_CAMERA_TRIGGER
 	pPort_->open("/dev/ttyS4");
 	pPort_->set_option(boost::asio::serial_port_base::baud_rate(115200));
+	threadPing_ = boost::thread(boost::bind(&InputModule::doWorkPing, this));
+	thread_ = boost::thread(boost::bind(&InputModule::doWork, this));
+#endif //EXTERN_CAMERA_TRIGGER
 
+#ifdef WITH_CAMERA
 	pCamera_->open();
 
 	bIsRunning_ = true;
-	thread_ = boost::thread(boost::bind(&InputModule::doWork, this));
-	threadPing_ = boost::thread(boost::bind(&InputModule::doWorkPing, this));
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
-#endif
+#endif //WITH_CAMERA
 }
 
 void InputModule::doWorkPing()
@@ -110,7 +112,35 @@ void InputModule::doWorkCamera()
 		}
 		pFreeQueue_->pop(pFramePackage);
 		pCamera_->capture(pFramePackage->image.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &(pFramePackage->exposureTime));
-		pCameraQueue_->push(pFramePackage);
+
+		if (liveTimeout_ > 0)
+		{
+			pFreeQueue_->push(pFramePackage);
+			liveTimeout_--;
+		}
+		else
+		{
+#ifdef EXTERN_CAMERA_TRIGGER
+			pCameraQueue_->push(pFramePackage);
+#else
+
+			pFramePackage->imu.timestamp_us = (uint32_t)1000 * 1000 / CLOCKS_PER_SEC * clock();
+			pFramePackage->imu.timestamp_ms = pFramePackage->imu.timestamp_us / 1000;
+			pFramePackage->imu.cam = TRUE;
+
+			pFramePackage->imu.ax = 0;
+			pFramePackage->imu.ay = 0;
+			pFramePackage->imu.ax = 0;
+			pFramePackage->imu.az = 0;
+			pFramePackage->imu.gx = 0;
+			pFramePackage->imu.gy = 0;
+			pFramePackage->imu.gz = 0;
+			pFramePackage->imu.temperature = 0;
+
+			pOutQueue_->push(pFramePackage);
+#endif //EXTERN_CAMERA_TRIGGER
+		}
+
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 }
@@ -126,9 +156,28 @@ void InputModule::doWork()
 		{
 			LinkUpPacket packet = raw_.next();
 			FramePackage* pFramePackage = NULL;
-			if (((RawImuData*)packet.pData)->cam)
+			if (liveTimeout_ <= 0)
 			{
-				if (pCameraQueue_->empty())
+				if (((RawImuData*)packet.pData)->cam)
+				{
+					if (pCameraQueue_->empty())
+					{
+						while (pFreeQueue_->empty())
+						{
+							boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+						}
+						pFreeQueue_->pop(pFramePackage);
+					}
+					while (!pCameraQueue_->empty())
+					{
+						if (pFramePackage != NULL)
+						{
+							release(pFramePackage);
+						}
+						pCameraQueue_->pop(pFramePackage);
+					}
+				}
+				else
 				{
 					while (pFreeQueue_->empty())
 					{
@@ -136,31 +185,7 @@ void InputModule::doWork()
 					}
 					pFreeQueue_->pop(pFramePackage);
 				}
-				while (!pCameraQueue_->empty())
-				{
-					if (pFramePackage != NULL)
-					{
-						release(pFramePackage);
-					}
-					pCameraQueue_->pop(pFramePackage);
-				}
-			}
-			else
-			{
-				while (pFreeQueue_->empty())
-				{
-					boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-				}
-				pFreeQueue_->pop(pFramePackage);
-			}
-			pFramePackage->imu = *((RawImuData*)packet.pData);
-			if (liveTimeout_ > 0)
-			{
-				pFreeQueue_->push(pFramePackage);
-				liveTimeout_--;
-			}
-			else
-			{
+				pFramePackage->imu = *((RawImuData*)packet.pData);
 				pOutQueue_->push(pFramePackage);
 			}
 

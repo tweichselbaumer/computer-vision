@@ -63,10 +63,13 @@ uint8_t uEyeCamera::open()
 
 	setExposure(0);
 
-	//double FPS, NEWFPS;
-	//FPS = 20;
-	//is_SetFrameRate(hCam, FPS, &NEWFPS);
+#ifdef EXTERN_CAMERA_TRIGGER
 	is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI);
+#else
+	double FPS, NEWFPS;
+	FPS = 20;
+	is_SetFrameRate(hCam, FPS, &NEWFPS);
+#endif //EXTERN_CAMERA_TRIGGER
 
 	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MIN, &minExposure, 8);
 	if (nRet != IS_SUCCESS)
