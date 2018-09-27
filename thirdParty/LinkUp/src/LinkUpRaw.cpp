@@ -345,6 +345,18 @@ void LinkUpRaw::progress(uint8_t *pData, uint32_t nCount)
 
 	nTotalReceivedBytes += nCount;
 
+#ifdef LINKUP_DEBUG_DETAIL
+	if(!logFile.is_open())
+		logFile.open("dump2.txt");
+	if (nCount > 0) {
+		for (int j = 0; j < nCount; j++) {
+			logFile.setf(std::ios::hex, std::ios::basefield);
+			logFile << (int)pData[j] << " ";
+			logFile.unsetf(std::ios::hex);
+		}
+	}
+#endif //LINKUP_DEBUG_DETAIL
+
 	while (i < nCount)
 	{
 		switch (stateIn)
@@ -522,8 +534,8 @@ void LinkUpRaw::progress(uint8_t *pData, uint32_t nCount)
 					skipIn = false;
 
 					pProgressingIn->packet.nCrc = pProgressingIn->packet.nCrc | (nNextByte << 8);
-
-					if (pProgressingIn->packet.nCrc == CRC16::calc(pProgressingIn->packet.pData, pProgressingIn->packet.nLength))
+					uint16_t crc = CRC16::calc(pProgressingIn->packet.pData, pProgressingIn->packet.nLength);
+					if (pProgressingIn->packet.nCrc == crc)
 					{
 						stateIn = LinkUpState::ReceiveEnd;
 					}

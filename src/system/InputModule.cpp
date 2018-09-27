@@ -15,11 +15,13 @@ uint8_t * InputModule::onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t
 	liveTimeout_ = liveTimeout;
 	FramePackage* pFramePackage = NULL;
 
-	while (pFreeQueue_->empty())
+	pFreeQueue_->pop(pFramePackage);
+
+	while (pFramePackage == NULL)
 	{
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		pFreeQueue_->pop(pFramePackage);
 	}
-	pFreeQueue_->pop(pFramePackage);
 
 	pFramePackage->imu = *((RawImuData*)pDataIn);
 
@@ -58,7 +60,7 @@ void InputModule::start()
 	bIsRunning_ = true;
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
 #endif //WITH_CAMERA
-}
+	}
 
 void InputModule::doWorkPing()
 {
@@ -139,10 +141,10 @@ void InputModule::doWorkCamera()
 
 			pOutQueue_->push(pFramePackage);
 #endif //EXTERN_CAMERA_TRIGGER
-		}
+	}
 
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-	}
+}
 }
 
 void InputModule::doWork()

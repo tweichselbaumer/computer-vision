@@ -6,6 +6,11 @@
 #include <cstdlib>
 #include <iostream>
 
+#ifdef LINKUP_DEBUG_DETAIL
+#include <iostream>
+#include <fstream>
+#endif //LINKUP_DEBUG_DETAIL
+
 using boost::asio::ip::tcp;
 using namespace std;
 
@@ -23,7 +28,7 @@ public:
 	boost::asio::ip::address address_;
 	uint16_t port_;
 private:
-	enum { max_length = 1024 * 100 };
+	enum { max_length = 32768 };
 
 	uint8_t* dataIn_;
 	uint8_t* dataOut1_;
@@ -38,5 +43,9 @@ private:
 	tcp::socket socket_;
 	TcpServer* server_;
 	LinkUpNode * node_;
+
+#ifdef LINKUP_DEBUG_DETAIL
+	ofstream logFile;
+#endif //LINKUP_DEBUG_DETAIL
 };
 #endif

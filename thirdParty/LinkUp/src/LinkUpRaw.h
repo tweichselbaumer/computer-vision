@@ -12,6 +12,11 @@
 
 #include "CRC16.h"
 
+#ifdef LINKUP_DEBUG_DETAIL
+#include <iostream>
+#include <fstream>
+#endif //LINKUP_DEBUG_DETAIL
+
 #ifndef LINKUP_RAW_PREAMBLE
 #define LINKUP_RAW_PREAMBLE 0xAA
 #endif
@@ -100,6 +105,9 @@ public:
 	uint32_t nTotalSendPackets;
 	uint64_t nTotalSendBytes;
 	uint64_t nTotalReceivedBytes;
+#ifdef LINKUP_DEBUG_DETAIL
+	std::ofstream logFile;
+#endif //LINKUP_DEBUG_DETAIL
 };
 
 #endif

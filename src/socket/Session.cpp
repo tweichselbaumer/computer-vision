@@ -27,14 +27,15 @@ void Session::read()
 #ifdef LINKUP_DEBUG_DETAIL
 			if (length > 0) {
 				for (int j = 0; j < length; j++) {
-					cout.setf(ios::hex, ios::basefield);
-					std::cout << "0x" << (int)dataIn_[j] << " ";
-					dataIn_[j] == 0;
-					cout.unsetf(ios::hex);
+					logFile.setf(ios::hex, ios::basefield);
+					logFile << (int)dataIn_[j] << " ";
+					logFile.unsetf(ios::hex);
 				}
-				std::cout << std::endl;
 			}
-#endif
+			if (length > 0)
+				std::cout << length << std::endl;
+#endif //LINKUP_DEBUG_DETAIL
+		
 			node_->progress(dataIn_, length, 0, true);
 			if (length == 0)
 			{
@@ -55,12 +56,20 @@ Session::~Session()
 	free(dataIn_);
 	free(dataOut1_);
 	free(dataOut2_);
+
+#ifdef LINKUP_DEBUG_DETAIL
+	logFile.close();
+#endif //LINKUP_DEBUG_DETAIL
 }
 
 void Session::start()
 {
 	this->write();
 	this->read();
+
+#ifdef LINKUP_DEBUG_DETAIL
+	logFile.open("dump.txt");
+#endif //LINKUP_DEBUG_DETAIL
 }
 
 void Session::write()

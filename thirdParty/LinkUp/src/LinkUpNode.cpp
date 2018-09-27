@@ -31,6 +31,10 @@ void LinkUpNode::reset() {
 void LinkUpNode::progress(uint8_t* pData, uint16_t nCount, uint16_t nMax, bool bFast)
 {
 	lock();
+#ifdef LINKUP_DEBUG_DETAIL
+	if (nCount > 0)
+		std::cout << nCount << std::endl;
+#endif //LINKUP_DEBUG_DETAIL
 	uint32_t nTime = getSystemTime();
 
 	connector.progress(pData, nCount);

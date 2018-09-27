@@ -4,7 +4,7 @@ project (computer-vision)
 set (CMAKE_CXX_STANDARD 11)
 
 if (MSVC)
-     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj")
+     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj /fp:fast /openmp /Ox")
 endif (MSVC)
 
 # The version number.
@@ -32,6 +32,7 @@ add_definitions(-DLINKUP_DEBUG)
 add_definitions(-D_USE_MATH_DEFINES)
 #add_definitions(-DLINKUP_DEBUG_DETAIL)
 add_definitions("-D__SSE3__")
+add_definitions("-DNOMINMAX")
 
 if (WITH_EXTERN_TRIGGER)
 	message("--- extern camera trigger")
@@ -49,6 +50,7 @@ endif ()
 
 
 find_package(Eigen3 REQUIRED)
+find_package(SuiteParse REQUIRED)
 
 add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LinkUp)
 
@@ -65,6 +67,12 @@ include_directories(${UEye_INCLUDE_DIRS})
 
 message("Files: ${cv_SOURCE_FILES}")
 
+find_package(Pangolin 0.2 QUIET)
+
+
+
+add_executable(computer-vision ${cv_SOURCE_FILES})
+
 if (WITH_DSO)
 	message("--- dso is aktiv")
 
@@ -77,19 +85,26 @@ if (WITH_DSO)
 	)  
 
 	add_definitions(-DWITH_DSO)
-	target_link_libraries (computer-vision dso)
+	if (Pangolin_FOUND)
+		message(${Pangolin_INCLUDE_DIRS})
+		include_directories( ${Pangolin_INCLUDE_DIRS} ) 
+		target_link_libraries (computer-vision dso ${Pangolin_LIBRARIES})
+	else()
+	target_link_libraries (computer-vision dso )
+	endif ()
+
 else ()
 	message("--- dso is inaktiv")
 endif ()
 
-add_executable(computer-vision ${cv_SOURCE_FILES})
 target_link_libraries (computer-vision LinkUp)
 target_link_libraries(computer-vision ${OpenCV_LIBS})
-target_link_libraries(computer-vision ${Boost_LIBRARIES})
+target_link_libraries(computer-vision ${Boost_LIBRARIES} ${BOOST_THREAD_LIBRARY})
 target_link_libraries(computer-vision ${UEye_LIBRARIES})
 
-IF (WIN32)
 
+IF (WIN32)
+target_link_libraries(computer-vision)
 ELSE()
 
 add_custom_command(
