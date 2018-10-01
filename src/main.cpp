@@ -5,7 +5,10 @@
 #include <opencv2/aruco.hpp>
 #include <opencv2/aruco/charuco.hpp>
 
+#ifdef WIN32
 #include <winsock2.h>
+#endif// WIN32
+
 #include <boost/asio.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/thread.hpp>
@@ -55,14 +58,21 @@ void doWork()
 	io_service.run();
 }
 
-void linkUpWorker()
+void linkUpWorkerNormal()
 {
 	while (running) {
-		pLinkUpNode->progress(0, 0, 100, false);
+		pLinkUpNode->progress(0, 0, LinkUpProgressType::Normal);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 }
 
+void linkUpWorkerAdvanced()
+{
+	while (running) {
+		pLinkUpNode->progress(0, 0, LinkUpProgressType::Advanced);
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+	}
+}
 
 void loadSettings()
 {
@@ -164,7 +174,8 @@ int main(int argc, char* argv[])
 
 		boost::thread_group worker_threads;
 		worker_threads.create_thread(doWork);
-		worker_threads.create_thread(linkUpWorker);
+		worker_threads.create_thread(linkUpWorkerNormal);
+		worker_threads.create_thread(linkUpWorkerAdvanced);
 
 		pInputModule->start();
 		pOutputModule->start();

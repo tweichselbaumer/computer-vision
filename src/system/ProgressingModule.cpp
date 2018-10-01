@@ -11,17 +11,19 @@ void  ProgressingModule::start()
 {
 
 #ifdef WITH_DSO
-	dso::setting_desiredImmatureDensity = 600;
-	dso::setting_desiredPointDensity = 500;
-	dso::setting_minFrames = 4;
-	dso::setting_maxFrames = 6;
-	dso::setting_maxOptIterations = 4;
+	dso::setting_desiredImmatureDensity = 2000;
+	dso::setting_desiredPointDensity = 2000;
+	dso::setting_minFrames = 5;
+	dso::setting_maxFrames = 7;
+	dso::setting_maxOptIterations = 9;
 	dso::setting_minOptIterations = 1;
 	dso::setting_logStuff = false;
 	dso::setting_kfGlobalWeight = 1.3;
 
+	dso::benchmarkSetting_width = 256;
+	dso::benchmarkSetting_height = 256;
 
-	dso::setting_photometricCalibration = 3;
+	dso::setting_photometricCalibration = 0;
 	dso::setting_affineOptModeA = 1;
 	dso::setting_affineOptModeB = 1;
 
@@ -42,7 +44,7 @@ void  ProgressingModule::start()
 		(int)undistorter->getSize()[1]));
 	//#endif //__linux
 
-	fullSystem->outputWrapper.push_back(new dso::IOWrap::SampleOutputWrapper());
+	//fullSystem->outputWrapper.push_back(new dso::IOWrap::SampleOutputWrapper());
 
 	if (undistorter->photometricUndist != 0)
 		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
@@ -101,6 +103,7 @@ void  ProgressingModule::doWork()
 		toggle = !toggle;
 		if (dso::setting_fullResetRequested)
 		{
+			frameID = 0;
 			std::vector<dso::IOWrap::Output3DWrapper*> wraps = fullSystem->outputWrapper;
 			delete fullSystem;
 			for (dso::IOWrap::Output3DWrapper* ow : wraps) ow->reset();
@@ -113,6 +116,7 @@ void  ProgressingModule::doWork()
 		}
 
 		if (fullSystem->isLost) {
+			frameID = 0;
 			std::vector<dso::IOWrap::Output3DWrapper*> wraps = fullSystem->outputWrapper;
 			delete fullSystem;
 
@@ -129,17 +133,18 @@ void  ProgressingModule::doWork()
 			dso::setting_fullResetRequested = false;
 
 		}
-		if (pFramePackage->imu.cam)
+		if (pFramePackage->imu.cam )
 		{
 			dso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
-			dso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, 0, 1.0f);
-			fullSystem->addActiveFrame(undistImg, frameID);
-			frameID++;
+			dso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, 1, 0, 1.0f);
+			fullSystem->addActiveFrame(undistImg, frameID++);
+
 			delete undistImg;
 		}
+	
 
 #endif //WITH_DSO
 
 		pOutputModule_->writeOut(pOutputPackage);
-}
+	}
 }

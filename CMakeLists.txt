@@ -14,7 +14,9 @@ set (Tutorial_VERSION_MINOR 0)
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/lib")
 
-SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" ${PROJECT_SOURCE_DIR}/cmake)
+SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake")
+
+message(${CMAKE_MODULE_PATH})
 
 file(GLOB_RECURSE cv_SOURCE_FILES 
 	"${PROJECT_SOURCE_DIR}/src/*.h"
@@ -22,17 +24,22 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 )
 
 set(WITH_DSO 0)
-set(WITH_CAMERA 1)
+set(WITH_CAMERA 0)
 set(WITH_EXTERN_TRIGGER 0)
 
+
+IF (WIN32)
 add_definitions(-DWIN32_LEAN_AND_MEAN)
+add_definitions(-D__SSE3__)
+add_definitions(-DNOMINMAX)
+ENDIF()
+
 add_definitions(-DLINKUP_BOOST_THREADSAFE)
 add_definitions(-DLINKUP_BOOST_CRC16)
 add_definitions(-DLINKUP_DEBUG)
 add_definitions(-D_USE_MATH_DEFINES)
 #add_definitions(-DLINKUP_DEBUG_DETAIL)
-add_definitions("-D__SSE3__")
-add_definitions("-DNOMINMAX")
+
 
 if (WITH_EXTERN_TRIGGER)
 	message("--- extern camera trigger")
@@ -48,9 +55,10 @@ else ()
 	message("--- camera disabled")
 endif ()
 
-
+if (WITH_DSO)
 find_package(Eigen3 REQUIRED)
 find_package(SuiteParse REQUIRED)
+endif ()
 
 add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LinkUp)
 

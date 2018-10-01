@@ -14,11 +14,11 @@
 #include "LinkUpRaw.h"
 #include "LinkUpPropertyLabel.h"
 #include "LinkUpFunctionLabel.h"
-
 #include "LinkUpLabelContainer.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -38,13 +38,16 @@ private:
 	void doWork();
 	void doWorkPing();
 	void doWorkCamera();
+	void doWorkReplay();
 
 	boost::lockfree::queue<FramePackage*>* pOutQueue_;
 	boost::lockfree::queue<FramePackage*>* pFreeQueue_;
 	boost::lockfree::queue<FramePackage*>* pCameraQueue_;
+	boost::lockfree::queue<uint8_t*>* pReplayQueue_;
 	boost::thread thread_;
 	boost::thread threadPing_;
 	boost::thread cameraThread_;
+	boost::thread replayThread_;
 	boost::asio::serial_port* pPort_;
 
 	bool bIsRunning_ = false;

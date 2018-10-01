@@ -5,6 +5,7 @@ InputModule::InputModule(boost::asio::io_service& io_service, LinkUpLabelContain
 	pFreeQueue_ = new boost::lockfree::queue<FramePackage*>(queueSize);
 	pOutQueue_ = new boost::lockfree::queue<FramePackage*>(queueSize);
 	pCameraQueue_ = new boost::lockfree::queue<FramePackage*>(queueSize);
+	pReplayQueue_ = new boost::lockfree::queue<uint8_t*>(queueSize);
 	pPort_ = new boost::asio::serial_port(io_service);
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
 }
@@ -12,40 +13,64 @@ InputModule::InputModule(boost::asio::io_service& io_service, LinkUpLabelContain
 uint8_t * InputModule::onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 {
 	*pSizeOut = 0;
-	liveTimeout_ = liveTimeout;
-	FramePackage* pFramePackage = NULL;
+	uint8_t* pCopy = (uint8_t*)calloc(nSizeIn + sizeof(uint32_t), sizeof(uint8_t));
+	memcpy(pCopy + sizeof(uint32_t), pDataIn, nSizeIn);
+	*((uint32_t*)pCopy) = nSizeIn;
+	pReplayQueue_->push(pCopy);
+	return NULL;
+}
 
-	pFreeQueue_->pop(pFramePackage);
-
-	while (pFramePackage == NULL)
+void InputModule::doWorkReplay()
+{
+	while (bIsRunning_)
 	{
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-		pFreeQueue_->pop(pFramePackage);
+		uint8_t* pDataIn;
+
+		while (!pReplayQueue_->pop(pDataIn))
+		{
+			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		}
+
+		uint32_t nSizeIn = *((uint32_t*)pDataIn);
+
+		liveTimeout_ = liveTimeout;
+
+		FramePackage* pFramePackage = NULL;
+
+		while (!pFreeQueue_->pop(pFramePackage))
+		{
+			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		}
+
+		pFramePackage->imu = *((RawImuData*)(pDataIn + sizeof(uint32_t)));
+
+		if (pFramePackage->imu.cam)
+		{
+			memcpy(&pFramePackage->exposureTime, pDataIn + sizeof(RawImuData) + sizeof(uint32_t), sizeof(double));
+			cv::Mat matImg;
+			matImg = cv::imdecode(cv::Mat(1, nSizeIn - (sizeof(RawImuData) + sizeof(double)), CV_8UC1, pDataIn + sizeof(RawImuData) + sizeof(double) + sizeof(uint32_t)), CV_LOAD_IMAGE_UNCHANGED);
+			memcpy(pFramePackage->image.data, matImg.data, matImg.rows*matImg.cols);
+			imshow("replay", matImg);
+			cv::waitKey(1);
+		}
+
+		free(pDataIn);
+
+		pOutQueue_->push(pFramePackage);
 	}
-
-	pFramePackage->imu = *((RawImuData*)pDataIn);
-
-	if (pFramePackage->imu.cam)
-	{
-		memcpy(&pFramePackage->exposureTime, pDataIn + sizeof(RawImuData), sizeof(double));
-		cv::Mat matImg;
-		matImg = cv::imdecode(cv::Mat(1, nSizeIn - (sizeof(RawImuData) + sizeof(double)), CV_8UC1, pDataIn + sizeof(RawImuData) + sizeof(double)), CV_LOAD_IMAGE_UNCHANGED);
-		memcpy(pFramePackage->image.data, matImg.data, matImg.rows*matImg.cols);
-	}
-
-	pOutQueue_->push(pFramePackage);
-
-	return 0;
 }
 
 void InputModule::start()
 {
+	bIsRunning_ = true;
 	for (int i = 0; i < queueSize; i++)
 	{
 		FramePackage* pframePackage = (FramePackage*)calloc(1, sizeof(FramePackage));
 		pframePackage->image.create(pCamera_->getWidth(), pCamera_->getHeight(), CV_8UC1);
 		pFreeQueue_->push(pframePackage);
 	}
+
+	replayThread_ = boost::thread(boost::bind(&InputModule::doWorkReplay, this));
 
 #ifdef EXTERN_CAMERA_TRIGGER
 	pPort_->open("/dev/ttyS4");
@@ -56,11 +81,9 @@ void InputModule::start()
 
 #ifdef WITH_CAMERA
 	pCamera_->open();
-
-	bIsRunning_ = true;
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
 #endif //WITH_CAMERA
-	}
+}
 
 void InputModule::doWorkPing()
 {
@@ -95,11 +118,10 @@ void InputModule::stop()
 FramePackage* InputModule::next()
 {
 	FramePackage* pFramePackage;
-	while (pOutQueue_->empty())
+	while (!pOutQueue_->pop(pFramePackage))
 	{
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
-	pOutQueue_->pop(pFramePackage);
 	return pFramePackage;
 }
 
@@ -108,11 +130,10 @@ void InputModule::doWorkCamera()
 	while (bIsRunning_)
 	{
 		FramePackage* pFramePackage;
-		while (pFreeQueue_->empty())
+		while (!pFreeQueue_->pop(pFramePackage))
 		{
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
-		pFreeQueue_->pop(pFramePackage);
 		pCamera_->capture(pFramePackage->image.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &(pFramePackage->exposureTime));
 
 		if (liveTimeout_ > 0)
@@ -164,28 +185,25 @@ void InputModule::doWork()
 				{
 					if (pCameraQueue_->empty())
 					{
-						while (pFreeQueue_->empty())
+						while (!pFreeQueue_->pop(pFramePackage))
 						{
 							boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 						}
-						pFreeQueue_->pop(pFramePackage);
 					}
-					while (!pCameraQueue_->empty())
+					while (pCameraQueue_->pop(pFramePackage))
 					{
 						if (pFramePackage != NULL)
 						{
 							release(pFramePackage);
 						}
-						pCameraQueue_->pop(pFramePackage);
 					}
 				}
 				else
 				{
-					while (pFreeQueue_->empty())
+					while (!pFreeQueue_->pop(pFramePackage))
 					{
 						boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 					}
-					pFreeQueue_->pop(pFramePackage);
 				}
 				pFramePackage->imu = *((RawImuData*)packet.pData);
 				pOutQueue_->push(pFramePackage);

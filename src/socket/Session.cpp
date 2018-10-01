@@ -35,8 +35,8 @@ void Session::read()
 			if (length > 0)
 				std::cout << length << std::endl;
 #endif //LINKUP_DEBUG_DETAIL
-		
-			node_->progress(dataIn_, length, 0, true);
+
+			node_->progress(dataIn_, length, LinkUpProgressType::Input);
 			if (length == 0)
 			{
 				boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
