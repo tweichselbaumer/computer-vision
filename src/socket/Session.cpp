@@ -22,7 +22,7 @@ void Session::read()
 	socket_.async_read_some(boost::asio::buffer(dataIn_, max_length),
 		[this, self](boost::system::error_code ec, std::size_t length)
 	{
-		if (ec == 0)
+		if (ec == boost::system::errc::errc_t::success)
 		{
 #ifdef LINKUP_DEBUG_DETAIL
 			if (length > 0) {
@@ -95,7 +95,7 @@ void Session::write()
 		boost::asio::async_write(socket_, boost::asio::buffer(dataOut2_, length2_),
 			[this, self](boost::system::error_code ec, std::size_t length)
 		{
-			if (ec == 0)
+			if (ec == boost::system::errc::errc_t::success)
 			{
 				write();
 			}

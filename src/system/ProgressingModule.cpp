@@ -91,6 +91,7 @@ void  ProgressingModule::doWork()
 {
 	bool toggle = false;
 	int i = 0;
+
 	while (bIsRunning_)
 	{
 		FramePackage* pFramePackage = pInputModule_->next();

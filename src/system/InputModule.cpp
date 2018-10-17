@@ -115,6 +115,7 @@ void InputModule::stop()
 	pCamera_->close();
 }
 
+
 FramePackage* InputModule::next()
 {
 	FramePackage* pFramePackage;
@@ -162,10 +163,10 @@ void InputModule::doWorkCamera()
 
 			pOutQueue_->push(pFramePackage);
 #endif //EXTERN_CAMERA_TRIGGER
-	}
+		}
 
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-}
+	}
 }
 
 void InputModule::doWork()
@@ -179,6 +180,7 @@ void InputModule::doWork()
 		{
 			LinkUpPacket packet = raw_.next();
 			FramePackage* pFramePackage = NULL;
+
 			if (liveTimeout_ <= 0)
 			{
 				if (((RawImuData*)packet.pData)->cam)
@@ -190,11 +192,16 @@ void InputModule::doWork()
 							boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 						}
 					}
-					while (pCameraQueue_->pop(pFramePackage))
+					else
 					{
-						if (pFramePackage != NULL)
+						FramePackage * pTemp = NULL;
+						while (pCameraQueue_->pop(pFramePackage))
 						{
-							release(pFramePackage);
+							if (pTemp != NULL)
+							{
+								release(pTemp);
+							}
+							pTemp = pFramePackage;
 						}
 					}
 				}
@@ -206,7 +213,8 @@ void InputModule::doWork()
 					}
 				}
 				pFramePackage->imu = *((RawImuData*)packet.pData);
-				pOutQueue_->push(pFramePackage);
+
+				while (!pOutQueue_->push(pFramePackage)) {}
 			}
 
 			free(packet.pData);

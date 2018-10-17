@@ -135,6 +135,7 @@ int main(int argc, char* argv[])
 {
 	try
 	{
+		cout << "starting computer-vision..." << endl << endl;
 		pSettings = new Settings("/opt/firefly/config.json");
 		pLinkUpNode = new LinkUpNode("computer_vision");
 

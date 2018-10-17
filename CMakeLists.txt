@@ -7,16 +7,15 @@ if (MSVC)
      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj /fp:fast /openmp /Ox")
 endif (MSVC)
 
-# The version number.
-set (Tutorial_VERSION_MAJOR 1)
-set (Tutorial_VERSION_MINOR 0)
-
+IF (MSVC)
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/lib")
+else()
+set(EXECUTABLE_OUTPUT_PATH bin)
+set(LIBRARY_OUTPUT_PATH lib)
+ENDIF()
 
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake")
-
-message(${CMAKE_MODULE_PATH})
 
 file(GLOB_RECURSE cv_SOURCE_FILES 
 	"${PROJECT_SOURCE_DIR}/src/*.h"
@@ -24,11 +23,11 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 )
 
 set(WITH_DSO 0)
-set(WITH_CAMERA 0)
-set(WITH_EXTERN_TRIGGER 0)
+set(WITH_CAMERA 1)
+set(WITH_EXTERN_TRIGGER 1)
 
 
-IF (WIN32)
+IF (MSVC)
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 add_definitions(-D__SSE3__)
 add_definitions(-DNOMINMAX)
@@ -54,9 +53,9 @@ if (WITH_CAMERA)
 else ()
 	message("--- camera disabled")
 endif ()
-
 if (WITH_DSO)
 find_package(Eigen3 REQUIRED)
+message(${EIGEN3_INCLUDE_DIR})
 find_package(SuiteParse REQUIRED)
 endif ()
 
@@ -113,13 +112,15 @@ target_link_libraries(computer-vision ${UEye_LIBRARIES})
 
 IF (WIN32)
 target_link_libraries(computer-vision)
-ELSE()
+else()
+
+target_link_libraries(computer-vision)
 
 add_custom_command(
     TARGET computer-vision 
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-       ${PROJECT_SOURCE_DIR}/bin/computer-vision
+       ${PROJECT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/computer-vision
         /opt/firefly
 )
 

@@ -47,11 +47,10 @@ void OutputModule::writeOut(OutputPackage* pResult)
 OutputPackage* OutputModule::nextFreeOutputPackage()
 {
 	OutputPackage* pOutputPackage;
-	while (pFreeQueue_->empty())
+	while (!pFreeQueue_->pop(pOutputPackage))
 	{
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
-	pFreeQueue_->pop(pOutputPackage);
 	return pOutputPackage;
 }
 
@@ -62,11 +61,10 @@ void OutputModule::doWork()
 		std::vector<int> compression_params;
 
 		OutputPackage* pOutputPackage;
-		while (pInQueue_->empty())
+		while (!pInQueue_->pop(pOutputPackage))
 		{
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
-		pInQueue_->pop(pOutputPackage);
 
 		if (pOutputPackage->pFramePackage->imu.cam)
 		{
