@@ -13,7 +13,7 @@ public:
 	uint8_t close();
 	uint16_t getHeight();
 	uint16_t getWidth();
-	uint8_t capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure);
+	uint8_t capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure, bool wait);
 protected:
 	HIDS hCam = 0;
 	INT id;

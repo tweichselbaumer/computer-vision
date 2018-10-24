@@ -22,6 +22,8 @@
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/core/ocl.hpp>
 
+#include <cmath>
+
 class InputModule
 {
 public:
@@ -39,6 +41,8 @@ private:
 	void doWorkPing();
 	void doWorkCamera();
 	void doWorkReplay();
+
+	void doCamInitSequence();
 
 	boost::lockfree::queue<FramePackage*>* pOutQueue_;
 	boost::lockfree::queue<FramePackage*>* pFreeQueue_;

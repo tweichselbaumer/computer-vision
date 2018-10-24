@@ -142,12 +142,17 @@ uint8_t uEyeCamera::close()
 	return 0;
 }
 
-uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure)
+uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure, bool wait)
 {
 	INT nRet;
 	setExposure(exposureSetting);
 	is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE, pNewExposure, 8);
-	nRet = is_FreezeVideo(hCam, IS_WAIT);
+
+	if (wait)
+		nRet = is_FreezeVideo(hCam, IS_WAIT);
+	else
+		nRet = is_FreezeVideo(hCam, IS_DONT_WAIT);
+
 	//nRet = is_CaptureVideo(hCam, IS_WAIT);
 	if (nRet != IS_SUCCESS)
 	{
