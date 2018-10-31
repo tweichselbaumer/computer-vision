@@ -24,6 +24,7 @@ PACK(RawImuData{
 		cv::Mat image;
 		double exposureTime;
 		RawImuData imu;
+		bool missedTrigger;
 	};
 
 #endif

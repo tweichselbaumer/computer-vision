@@ -4,6 +4,7 @@
 #include <uEye.h>
 #include <stdint.h>
 #include <cstring>
+#include <iostream>
 #include "Camera.h"
 
 class uEyeCamera :public Camera
@@ -13,7 +14,7 @@ public:
 	uint8_t close();
 	uint16_t getHeight();
 	uint16_t getWidth();
-	uint8_t capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure, bool wait);
+	uint8_t capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure, bool wait, uint32_t* pMissed);
 protected:
 	HIDS hCam = 0;
 	INT id;

@@ -89,6 +89,8 @@ uint8_t uEyeCamera::open()
 		return -1;
 	}
 
+	is_CameraStatus(hCam, IS_TRIGGER_MISSED, IS_GET_STATUS);
+
 	return 0;
 }
 
@@ -142,7 +144,7 @@ uint8_t uEyeCamera::close()
 	return 0;
 }
 
-uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure, bool wait)
+uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNewExposure, bool wait, uint32_t* pMissed)
 {
 	INT nRet;
 	setExposure(exposureSetting);
@@ -152,6 +154,12 @@ uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNe
 		nRet = is_FreezeVideo(hCam, IS_WAIT);
 	else
 		nRet = is_FreezeVideo(hCam, IS_DONT_WAIT);
+
+	*pMissed = is_CameraStatus(hCam, IS_TRIGGER_MISSED, IS_GET_STATUS);
+	if (*pMissed > 0)
+	{
+		std::cout << "MISSED: " << *pMissed << std::endl;
+	}
 
 	//nRet = is_CaptureVideo(hCam, IS_WAIT);
 	if (nRet != IS_SUCCESS)

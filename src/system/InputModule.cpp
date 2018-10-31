@@ -70,14 +70,6 @@ void InputModule::start()
 		pFreeQueue_->push(pFramePackage);
 	}
 
-	/*correct time shift*/
-	for (int i = 0; i < 1; i++)
-	{
-		FramePackage* pFramePackage = (FramePackage*)calloc(1, sizeof(FramePackage));
-		pFramePackage->image.create(pCamera_->getWidth(), pCamera_->getHeight(), CV_8UC1);
-		pCameraQueue_->push(pFramePackage);
-	}
-
 	replayThread_ = boost::thread(boost::bind(&InputModule::doWorkReplay, this));
 
 #ifdef EXTERN_CAMERA_TRIGGER
@@ -91,7 +83,7 @@ void InputModule::start()
 	pCamera_->open();
 
 #ifdef EXTERN_CAMERA_TRIGGER
-	doCamInitSequence();
+	//doCamInitSequence();
 #endif //EXTERN_CAMERA_TRIGGER
 
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
@@ -106,11 +98,12 @@ void InputModule::start()
 
 void InputModule::doCamInitSequence()
 {
+	uint32_t nMissed;
 	cv::Mat pTemp(pCamera_->getWidth(), pCamera_->getHeight(), CV_8UC1);
 	double exposure;
 	for (int i = 0; i < 20; i++)
 	{
-		pCamera_->capture(pTemp.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &exposure, false);
+		pCamera_->capture(pTemp.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &exposure, false, &nMissed);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
 	}
 }
@@ -128,7 +121,7 @@ void InputModule::doWorkPing()
 		raw_.send(packet);
 		uint16_t nBytesToWrite = raw_.getRaw(pTemp, 64);
 		boost::asio::write(*pPort_, boost::asio::buffer(pTemp, nBytesToWrite));
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(400));
 	}
 }
 
@@ -158,14 +151,15 @@ FramePackage* InputModule::next()
 
 void InputModule::doWorkCamera()
 {
+	uint32_t nMissedFrames = 0;
 	while (bIsRunning_)
 	{
 		FramePackage* pFramePackage;
 		while (!pFreeQueue_->pop(pFramePackage))
 		{
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+			//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
-		if (pCamera_->capture(pFramePackage->image.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &(pFramePackage->exposureTime), true) == 0)
+		if (pCamera_->capture(pFramePackage->image.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &(pFramePackage->exposureTime), true, &nMissedFrames) == 0)
 		{
 			if (liveTimeout_ > 0)
 			{
@@ -176,6 +170,22 @@ void InputModule::doWorkCamera()
 			{
 #ifdef EXTERN_CAMERA_TRIGGER
 				pCameraQueue_->push(pFramePackage);
+				pFramePackage->missedTrigger = false;
+				if (nMissedFrames > 0)
+				{
+					for (uint32_t i = 0; i < nMissedFrames; i++)
+					{
+						FramePackage* pFramePackageMissed;
+						while (!pFreeQueue_->pop(pFramePackageMissed))
+						{
+							//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+						}
+						pFramePackageMissed->missedTrigger = true;
+						pFramePackageMissed->exposureTime = 0;
+						pCameraQueue_->push(pFramePackageMissed);
+					}
+				}
+
 #else
 
 				pFramePackage->imu.timestamp_us = (uint32_t)1000 * 1000 / CLOCKS_PER_SEC * clock();
@@ -195,8 +205,12 @@ void InputModule::doWorkCamera()
 #endif //EXTERN_CAMERA_TRIGGER
 			}
 		}
+		else
+		{
+			int debug = 1;
+		}
 
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 }
 
@@ -234,20 +248,20 @@ void InputModule::doWork()
 							boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 						}
 					}
-					else 
+					else
 					{
-						hasCam = true;
+						hasCam = !pFramePackage->missedTrigger;
 					}
 				}
 				else
 				{
-					if (toDelay == 0) 
+					if (toDelay == 0)
 					{
 						toDelay = -1;
 						pFramePackage = pFrameToDelay;
-						hasCam = true;
+						hasCam = !pFramePackage->missedTrigger;
 					}
-					else 
+					else
 					{
 						hasCam = false;
 						if (toDelay > 0)
