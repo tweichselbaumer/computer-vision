@@ -1,3 +1,6 @@
 [submodule "thirdParty/dso"]
 	path = thirdParty/dso
 	url = https://github.com/tweichselbaumer/dso
+[submodule "thirdParty/LDSO"]
+	path = thirdParty/LDSO
+	url = https://github.com/tweichselbaumer/LDSO.git
