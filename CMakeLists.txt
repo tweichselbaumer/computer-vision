@@ -22,7 +22,7 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 	"${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
-set(WITH_DSO 0)
+set(WITH_DSO 1)
 set(WITH_CAMERA 1)
 set(WITH_EXTERN_TRIGGER 1)
 
@@ -53,10 +53,46 @@ if (WITH_CAMERA)
 else ()
 	message("--- camera disabled")
 endif ()
+
+
+
+
 if (WITH_DSO)
-find_package(Eigen3 REQUIRED)
-message(${EIGEN3_INCLUDE_DIR})
-find_package(SuiteParse REQUIRED)
+	find_package(Eigen3 REQUIRED)
+	find_package(Eigen3 REQUIRED)
+	find_package(OpenCV REQUIRED)
+	find_package(Glog REQUIRED)
+	find_package(Pangolin REQUIRED)
+	find_package(g2o REQUIRED)
+	find_package(DBoW3 REQUIRED)
+	find_package(Boost REQUIRED COMPONENTS system)
+
+	include_directories(
+        ${EIGEN3_INCLUDE_DIR}
+        ${OpenCV_INCLUDE_DIR}
+        ${GLOG_INCLUDE_DIR}
+        ${Pangolin_INCLUDE_DIRS}
+		${G2O_INCLUDE_DIR}
+		${DBoW3_INCLUDE_DIRS}
+		${Boost_INCLUDE_DIR}
+
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
+	)
+
+	if (MSVC)
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj /fp:fast /openmp /Ox")
+		add_definitions("-D__SSE3__")
+		add_definitions("-DNOMINMAX")
+		add_definitions("-D_USE_MATH_DEFINES")
+		add_definitions("-DGOOGLE_GLOG_DLL_DECL=")
+		add_definitions("-DGLOG_NO_ABBREVIATED_SEVERITIES=")
+		add_definitions("-DWIN32_LEAN_AND_MEAN=")
+	else()
+		add_definitions("-DENABLE_SSE")
+		set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated -march=native -Wno-duplicate-decl-specifier -Wno-ignored-qualifiers -Wno-reorder -pthread")
+	endif (MSVC)
+
 endif ()
 
 add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LinkUp)
@@ -83,11 +119,11 @@ add_executable(computer-vision ${cv_SOURCE_FILES})
 if (WITH_DSO)
 	message("--- dso is aktiv")
 
-	add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/dso)
+	add_subdirectory (${PROJECT_SOURCE_DIR}/thirdParty/LDSO)
 
 	include_directories(
-	  ${PROJECT_SOURCE_DIR}/thirdParty/dso/src
-	  ${PROJECT_SOURCE_DIR}/thirdParty/dso/thirdparty/Sophus
+	  ${PROJECT_SOURCE_DIR}/thirdParty/LDSO/include
+	  ${PROJECT_SOURCE_DIR}/thirdParty/LDSO/thirdparty/Sophus
 	  ${EIGEN3_INCLUDE_DIR}
 	)  
 
@@ -95,9 +131,9 @@ if (WITH_DSO)
 	if (Pangolin_FOUND)
 		message(${Pangolin_INCLUDE_DIRS})
 		include_directories( ${Pangolin_INCLUDE_DIRS} ) 
-		target_link_libraries (computer-vision dso ${Pangolin_LIBRARIES})
+		target_link_libraries (computer-vision ldso ${Pangolin_LIBRARIES})
 	else()
-	target_link_libraries (computer-vision dso )
+	target_link_libraries (computer-vision ldso )
 	endif ()
 
 else ()

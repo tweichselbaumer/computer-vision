@@ -5,12 +5,12 @@
 #include "OutputModule.h"
 
 #ifdef WITH_DSO
-#include "util/settings.h"
-#include "FullSystem/FullSystem.h"
-#include "util/Undistort.h"
-#include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
+#include "Settings.h"
+#include "frontend/FullSystem.h"
+#include "frontend/Undistort.h"
+
 //#ifdef __linux
-#include "IOWrapper/Pangolin/PangolinDSOViewer.h"
+
 //#endif //__linux
 #endif //WITH_DSO
 
@@ -35,8 +35,8 @@ private:
 	LinkUpLabelContainer* pLinkUpLabelContainer_;
 
 #ifdef WITH_DSO
-	dso::FullSystem* fullSystem = 0;
-	dso::Undistort* undistorter = 0;
+	ldso::FullSystem* fullSystem = 0;
+	ldso::Undistort* undistorter = 0;
 	int frameID = 0;
 
 	std::string calib = "camera.txt";
