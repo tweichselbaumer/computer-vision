@@ -11,45 +11,52 @@ void  ProgressingModule::start()
 {
 
 #ifdef WITH_DSO
-	/*ldso::setting_desiredImmatureDensity = 2000;
+	ldso::setting_desiredImmatureDensity = 1500;
 	ldso::setting_desiredPointDensity = 2000;
 	ldso::setting_minFrames = 5;
 	ldso::setting_maxFrames = 7;
-	ldso::setting_maxOptIterations = 9;
+	ldso::setting_maxOptIterations = 6;
 	ldso::setting_minOptIterations = 1;
 	ldso::setting_logStuff = false;
 	ldso::setting_kfGlobalWeight = 1.3;
 
+	setting_desiredImmatureDensity = 600;
+	setting_desiredPointDensity = 800;
+	setting_minFrames = 4;
+	setting_maxFrames = 6;
+	setting_maxOptIterations = 4;
+	setting_minOptIterations = 1;
+
+	ldso::setting_pointSelection = 0;
+
 	ldso::benchmarkSetting_width = 256;
 	ldso::benchmarkSetting_height = 256;
 
-	ldso::setting_photometricCalibration = 0;
+	ldso::setting_photometricCalibration = 2;
 	ldso::setting_affineOptModeA = 1;
 	ldso::setting_affineOptModeB = 1;
+	ldso::setting_enableLoopClosing = false;
 
-	undistorter = ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile);*/
+	undistorter = ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile);
 
-	/*ldso::setGlobalCalib(
+	ldso::internal::setGlobalCalib(
 		(int)undistorter->getSize()[0],
 		(int)undistorter->getSize()[1],
-		undistorter->getK().cast<float>());*/
+		undistorter->getK().cast<float>());
 
+	shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
+	//voc->load(vocFile);
 
-	/*fullSystem = new ldso::FullSystem();
-	fullSystem->linearizeOperation = false;*/
+	fullSystem = new ldso::FullSystem(voc);
+	fullSystem->linearizeOperation = false;
 
-	//#ifdef __linux
-	/*fullSystem->outputWrapper.push_back(new ldso::IOWrap::PangolinDSOViewer(
-		(int)undistorter->getSize()[0],
-		(int)undistorter->getSize()[1]));*/
-	//#endif //__linux
+	viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
+	fullSystem->setViewer(viewer);
 
-	//fullSystem->outputWrapper.push_back(new ldso::IOWrap::SampleOutputWrapper());
+	if (undistorter->photometricUndist != 0)
+		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 
-	/*if (undistorter->photometricUndist != 0)
-		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());*/
-
-#endif //WITH_DSO
+#endif WITH_DSO
 
 	bIsRunning_ = true;
 	thread_ = boost::thread(boost::bind(&ProgressingModule::doWork, this));
@@ -100,48 +107,32 @@ void  ProgressingModule::doWork()
 		pOutputPackage->imuData = convertImu(pOutputPackage->pFramePackage->imu);
 
 #ifdef WITH_DSO
-		//toggle = !toggle;
-		//if (ldso::setting_fullResetRequested)
-		//{
-		//	frameID = 0;
-		//	/*std::vector<ldso::IOWrap::Output3DWrapper*> wraps = fullSystem->outputWrapper;*/
-		//	delete fullSystem;
-		//	//for (ldso::IOWrap::Output3DWrapper* ow : wraps) ow->reset();
-		//	fullSystem = new ldso::FullSystem();
-		//	fullSystem->linearizeOperation = false;
-		//	//fullSystem->outputWrapper = wraps;
-		//	if (undistorter->photometricUndist != 0)
-		//		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
-		//	ldso::setting_fullResetRequested = false;
-		//}
 
-		//if (fullSystem->isLost) {
-		//	frameID = 0;
-		//	//std::vector<ldso::IOWrap::Output3DWrapper*> wraps = fullSystem->outputWrapper;
-		//	delete fullSystem;
+		if (pFramePackage->imu.cam)
+		{
+			ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
+			ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp, 1.0f);
+			fullSystem->addActiveFrame(undistImg, frameID++);
 
-		//	//for (ldso::IOWrap::Output3DWrapper* ow : wraps) ow->reset();
+			delete undistImg;
+		}
 
-		//	fullSystem = new ldso::FullSystem();
-		//	if (undistorter->photometricUndist != 0)
-		//		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
-		//	fullSystem->linearizeOperation = false;
+		if (fullSystem->isLost || ldso::setting_fullResetRequested)
+		{
+			ldso::setting_fullResetRequested = false;
 
+			shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
+			//voc->load(vocFile);
 
-		//	//fullSystem->outputWrapper = wraps;
+			fullSystem = new ldso::FullSystem(voc);
+			fullSystem->linearizeOperation = false;
 
-		//	ldso::setting_fullResetRequested = false;
+			fullSystem->setViewer(viewer);
+			viewer->reset();
+			if (undistorter->photometricUndist != 0)
+				fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
+		}
 
-		//}
-		//if (pFramePackage->imu.cam )
-		//{
-		//	ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
-		//	ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, 1, 0, 1.0f);
-		//	fullSystem->addActiveFrame(undistImg, frameID++);
-
-		//	delete undistImg;
-		//}
-	
 
 #endif //WITH_DSO
 

@@ -37,6 +37,7 @@ private:
 #ifdef WITH_DSO
 	ldso::FullSystem* fullSystem = 0;
 	ldso::Undistort* undistorter = 0;
+	shared_ptr<PangolinDSOViewer> viewer = 0;
 	int frameID = 0;
 
 	std::string calib = "camera.txt";
