@@ -29,6 +29,8 @@
 #include <memory>
 #include <utility>
 
+#include <glog/logging.h>
+
 #ifdef __linux
 #include <unistd.h>
 #endif
@@ -135,7 +137,12 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		cout << "starting computer-vision..." << endl << endl;
+		google::InitGoogleLogging(argv[0]);
+		FLAGS_logtostderr = 1;
+		FLAGS_log_dir = ".";
+		FLAGS_minloglevel = 1;
+		LOG(WARNING) << "test computer-vision...";
+		LOG(INFO) << "starting computer-vision...";
 		pSettings = new Settings("/opt/firefly/config.json");
 		pLinkUpNode = new LinkUpNode("computer_vision");
 

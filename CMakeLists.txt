@@ -23,8 +23,8 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 )
 
 set(WITH_DSO 1)
-set(WITH_CAMERA 0)
-set(WITH_EXTERN_TRIGGER 0)
+set(WITH_CAMERA 1)
+set(WITH_EXTERN_TRIGGER 1)
 
 
 IF (MSVC)
@@ -59,11 +59,10 @@ endif ()
 
 if (WITH_DSO)
 	find_package(Eigen3 REQUIRED)
-	find_package(Eigen3 REQUIRED)
 	find_package(OpenCV REQUIRED)
 	find_package(Glog REQUIRED)
 	find_package(Pangolin REQUIRED)
-	find_package(g2o REQUIRED)
+	find_package(G2O REQUIRED)
 	find_package(DBoW3 REQUIRED)
 	find_package(Boost REQUIRED COMPONENTS system)
 
@@ -144,6 +143,7 @@ target_link_libraries (computer-vision LinkUp)
 target_link_libraries(computer-vision ${OpenCV_LIBS})
 target_link_libraries(computer-vision ${Boost_LIBRARIES} ${BOOST_THREAD_LIBRARY})
 target_link_libraries(computer-vision ${UEye_LIBRARIES})
+target_link_libraries(computer-vision  ${GLOG_LIBRARY})
 
 
 IF (WIN32)

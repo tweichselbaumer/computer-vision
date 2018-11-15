@@ -50,8 +50,8 @@ void InputModule::doWorkReplay()
 			cv::Mat matImg;
 			matImg = cv::imdecode(cv::Mat(1, nSizeIn - (sizeof(RawImuData) + sizeof(double)), CV_8UC1, pDataIn + sizeof(RawImuData) + sizeof(double) + sizeof(uint32_t)), CV_LOAD_IMAGE_UNCHANGED);
 			memcpy(pFramePackage->image.data, matImg.data, matImg.rows*matImg.cols);
-			imshow("replay", matImg);
-			cv::waitKey(1);
+			/*imshow("replay", matImg);
+			cv::waitKey(1);*/
 		}
 
 		free(pDataIn);

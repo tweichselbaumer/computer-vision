@@ -20,12 +20,12 @@ void  ProgressingModule::start()
 	ldso::setting_logStuff = false;
 	ldso::setting_kfGlobalWeight = 1.3;
 
-	setting_desiredImmatureDensity = 600;
-	setting_desiredPointDensity = 800;
-	setting_minFrames = 4;
-	setting_maxFrames = 6;
-	setting_maxOptIterations = 4;
-	setting_minOptIterations = 1;
+	ldso::setting_desiredImmatureDensity = 600;
+	ldso::setting_desiredPointDensity = 800;
+	ldso::setting_minFrames = 4;
+	ldso::setting_maxFrames = 6;
+	ldso::setting_maxOptIterations = 4;
+	ldso::setting_minOptIterations = 1;
 
 	ldso::setting_pointSelection = 0;
 
@@ -36,6 +36,8 @@ void  ProgressingModule::start()
 	ldso::setting_affineOptModeA = 1;
 	ldso::setting_affineOptModeB = 1;
 	ldso::setting_enableLoopClosing = false;
+
+	ldso::setting_debugout_runquiet = true;
 
 	undistorter = ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile);
 
@@ -56,7 +58,7 @@ void  ProgressingModule::start()
 	if (undistorter->photometricUndist != 0)
 		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 
-#endif WITH_DSO
+#endif //WITH_DSO
 
 	bIsRunning_ = true;
 	thread_ = boost::thread(boost::bind(&ProgressingModule::doWork, this));
