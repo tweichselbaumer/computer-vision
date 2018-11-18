@@ -63,7 +63,7 @@ if (WITH_DSO)
 	find_package(OpenCV REQUIRED)
 	find_package(Glog REQUIRED)
 	find_package(Pangolin REQUIRED)
-	find_package(g2o REQUIRED)
+	find_package(G2O REQUIRED)
 	find_package(DBoW3 REQUIRED)
 	find_package(Boost REQUIRED COMPONENTS system)
 
