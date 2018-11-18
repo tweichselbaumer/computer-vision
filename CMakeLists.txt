@@ -22,6 +22,9 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 	"${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
+add_definitions(-DIMAGE_WIDTH=512)
+add_definitions(-DIMAGE_HEIGHT=512)
+
 set(WITH_DSO 1)
 set(WITH_CAMERA 0)
 set(WITH_EXTERN_TRIGGER 0)
@@ -55,10 +58,7 @@ else ()
 endif ()
 
 
-
-
 if (WITH_DSO)
-	find_package(Eigen3 REQUIRED)
 	find_package(Eigen3 REQUIRED)
 	find_package(OpenCV REQUIRED)
 	find_package(Glog REQUIRED)
@@ -81,7 +81,6 @@ if (WITH_DSO)
 	)
 
 	if (MSVC)
-		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj /fp:fast /openmp /Ox")
 		add_definitions("-D__SSE3__")
 		add_definitions("-DNOMINMAX")
 		add_definitions("-D_USE_MATH_DEFINES")
@@ -105,14 +104,12 @@ find_package(Boost REQUIRED COMPONENTS system thread filesystem)
 include_directories(${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-FIND_PACKAGE(UEye REQUIRED)
-include_directories(${UEye_INCLUDE_DIRS})
+if (WITH_CAMERA)
+	FIND_PACKAGE(UEye REQUIRED)
+	include_directories(${UEye_INCLUDE_DIRS})
+endif ()
 
 message("Files: ${cv_SOURCE_FILES}")
-
-find_package(Pangolin 0.2 QUIET)
-
-
 
 add_executable(computer-vision ${cv_SOURCE_FILES})
 
@@ -143,8 +140,10 @@ endif ()
 target_link_libraries (computer-vision LinkUp)
 target_link_libraries(computer-vision ${OpenCV_LIBS})
 target_link_libraries(computer-vision ${Boost_LIBRARIES} ${BOOST_THREAD_LIBRARY})
-target_link_libraries(computer-vision ${UEye_LIBRARIES})
 
+if (WITH_CAMERA)
+	target_link_libraries(computer-vision ${UEye_LIBRARIES})
+endif ()
 
 IF (WIN32)
 target_link_libraries(computer-vision)

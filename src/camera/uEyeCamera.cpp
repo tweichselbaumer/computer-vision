@@ -1,3 +1,4 @@
+#ifdef WITH_CAMERA
 #include "uEyeCamera.h"
 
 uint8_t uEyeCamera::open()
@@ -181,10 +182,11 @@ uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNe
 
 uint16_t uEyeCamera::getHeight()
 {
-	return 512;
+	return IMAGE_HEIGHT;
 }
 
 uint16_t uEyeCamera::getWidth()
 {
-	return 512;
+	return IMAGE_WIDTH;
 }
+#endif //WITH_CAMERA

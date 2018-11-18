@@ -1,3 +1,4 @@
+#ifdef WITH_CAMERA
 #ifndef _UEYE_CAMERA_H
 #define _UEYE_CAMERA_H
 
@@ -26,3 +27,4 @@ protected:
 	void setExposure(int16_t exposure);
 };
 #endif
+#endif //WITH_CAMERA
