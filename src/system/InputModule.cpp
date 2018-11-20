@@ -66,7 +66,7 @@ void InputModule::start()
 	for (int i = 0; i < queueSize; i++)
 	{
 		FramePackage* pFramePackage = (FramePackage*)calloc(1, sizeof(FramePackage));
-		pFramePackage->image.create(pCamera_->getWidth(), pCamera_->getHeight(), CV_8UC1);
+		pFramePackage->image.create(IMAGE_WIDTH, IMAGE_HEIGHT, CV_8UC1);
 		pFreeQueue_->push(pFramePackage);
 	}
 
@@ -77,7 +77,6 @@ void InputModule::start()
 	pPort_->set_option(boost::asio::serial_port_base::baud_rate(115200));
 	thread_ = boost::thread(boost::bind(&InputModule::doWork, this));
 #endif //EXTERN_CAMERA_TRIGGER
-
 
 #ifdef WITH_CAMERA
 	pCamera_->open();
@@ -98,6 +97,7 @@ void InputModule::start()
 
 void InputModule::doCamInitSequence()
 {
+#ifdef WITH_CAMERA
 	uint32_t nMissed;
 	cv::Mat pTemp(pCamera_->getWidth(), pCamera_->getHeight(), CV_8UC1);
 	double exposure;
@@ -106,6 +106,7 @@ void InputModule::doCamInitSequence()
 		pCamera_->capture(pTemp.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &exposure, false, &nMissed);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
 	}
+#endif //WITH_CAMERA
 }
 
 void InputModule::doWorkPing()
@@ -135,7 +136,9 @@ void InputModule::stop()
 	bIsRunning_ = false;
 	thread_.join();
 	pPort_->close();
+#ifdef WITH_CAMERA
 	pCamera_->close();
+#endif //WITH_CAMERA
 }
 
 
@@ -151,6 +154,7 @@ FramePackage* InputModule::next()
 
 void InputModule::doWorkCamera()
 {
+#ifdef WITH_CAMERA
 	uint32_t nMissedFrames = 0;
 	while (bIsRunning_)
 	{
@@ -212,6 +216,7 @@ void InputModule::doWorkCamera()
 
 		//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
+#endif //WITH_CAMERA
 }
 
 void InputModule::doWork()

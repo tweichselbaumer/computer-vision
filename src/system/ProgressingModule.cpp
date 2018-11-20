@@ -20,6 +20,7 @@ void  ProgressingModule::start()
 	ldso::setting_logStuff = false;
 	ldso::setting_kfGlobalWeight = 1.3;
 
+	
 	ldso::setting_desiredImmatureDensity = 600;
 	ldso::setting_desiredPointDensity = 800;
 	ldso::setting_minFrames = 4;
@@ -29,8 +30,8 @@ void  ProgressingModule::start()
 
 	ldso::setting_pointSelection = 0;
 
-	ldso::benchmarkSetting_width = 256;
-	ldso::benchmarkSetting_height = 256;
+	/*ldso::benchmarkSetting_width = 256;
+	ldso::benchmarkSetting_height = 256;*/
 
 	ldso::setting_photometricCalibration = 2;
 	ldso::setting_affineOptModeA = 1;

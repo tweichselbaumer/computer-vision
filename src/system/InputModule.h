@@ -3,8 +3,10 @@
 
 #include "FramePackage.h"
 
+#ifdef WITH_CAMERA
 #include "../camera/Camera.h"
 #include "../camera/uEyeCamera.h"
+#endif //WITH_CAMERA
 
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
@@ -57,7 +59,9 @@ private:
 	bool bIsRunning_ = false;
 	int liveTimeout_ = 0;
 
+#ifdef WITH_CAMERA
 	Camera* pCamera_ = new uEyeCamera();
+#endif //WITH_CAMERA
 
 	LinkUpLabelContainer* pLinkUpLabelContainer_;
 	LinkUpRaw raw_ = {};
