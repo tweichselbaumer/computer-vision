@@ -135,13 +135,13 @@ uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeO
 
 int main(int argc, char* argv[])
 {
-	try
-	{
-		google::InitGoogleLogging(argv[0]);
+	/*try
+	{*/
 		FLAGS_logtostderr = 1;
 		FLAGS_log_dir = ".";
-		FLAGS_minloglevel = 1;
-		LOG(WARNING) << "test computer-vision...";
+		FLAGS_minloglevel = 0;
+		google::InitGoogleLogging(argv[0]);
+
 		LOG(INFO) << "starting computer-vision...";
 		pSettings = new Settings("/opt/firefly/config.json");
 		pLinkUpNode = new LinkUpNode("computer_vision");
@@ -211,11 +211,11 @@ int main(int argc, char* argv[])
 
 
 		return 0;
-	}
+	/*}
 	catch (std::exception& e)
 	{
 		std::cerr << "Exception: " << e.what() << "\n";
-	}
+	}*/
 
 	return 0;
 }
