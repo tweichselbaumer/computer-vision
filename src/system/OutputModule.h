@@ -3,6 +3,7 @@
 
 #include "OutputPackage.h"
 #include "InputModule.h"
+#include "VOPublishPackage.h"
 
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
@@ -22,13 +23,17 @@ public:
 	void writeOut(OutputPackage* pResult);
 	OutputPackage* nextFreeOutputPackage();
 private:
-	enum { queueSize = 200};
+	enum { queueSize = 200 };
 
 	boost::thread thread_;
+	boost::thread threadPublish_;
 	boost::lockfree::queue<OutputPackage*>* pInQueue_;
 	boost::lockfree::queue<OutputPackage*>* pFreeQueue_;
 
+	boost::lockfree::queue<PublishFrame*>* pInPublishQueue_;
+
 	void doWork();
+	void doWorkPublish();
 
 	bool bIsRunning_ = false;
 	bool bIsRecording_ = false;

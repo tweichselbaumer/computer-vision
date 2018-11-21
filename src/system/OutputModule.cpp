@@ -4,6 +4,8 @@ OutputModule::OutputModule(InputModule* pInputModule, LinkUpLabelContainer* pLin
 {
 	pFreeQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
+	pInPublishQueue_ = new boost::lockfree::queue<PublishFrame*>(queueSize);
+
 	pInputModule_ = pInputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
 }
@@ -30,6 +32,7 @@ void OutputModule::start()
 	bIsRunning_ = true;
 
 	thread_ = boost::thread(boost::bind(&OutputModule::doWork, this));
+	threadPublish_ = boost::thread(boost::bind(&OutputModule::doWorkPublish, this));
 }
 
 void OutputModule::stop()
@@ -52,6 +55,23 @@ OutputPackage* OutputModule::nextFreeOutputPackage()
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 	}
 	return pOutputPackage;
+}
+
+void OutputModule::doWorkPublish()
+{
+	while (bIsRunning_)
+	{
+		PublishPackage* pPublishPackage;
+		while (!pInPublishQueue_->pop(pPublishPackage))
+		{
+			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		}
+
+		if (pPublishPackage->hasFrame)
+		{
+
+		}
+	}
 }
 
 void OutputModule::doWork()

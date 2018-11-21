@@ -8,6 +8,8 @@
 #include "Settings.h"
 #include "frontend/FullSystem.h"
 #include "frontend/Undistort.h"
+#include "frontend/OutputWrapper.h"
+#include "frontend/DSOViewer.h"
 
 //#ifdef __linux
 
@@ -16,12 +18,26 @@
 
 #include <boost/thread.hpp>
 
+#ifdef WITH_DSO
+class ProgressingModule : public ldso::OutputWrapper
+#else
 class ProgressingModule
+#endif //WITH_DSO
 {
 public:
 	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer);
 	void start();
 	void stop();
+
+#ifdef WITH_DSO
+	void publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib);
+	void publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib);
+	void setMap(shared_ptr<Map> m);
+	void join();
+	void reset();
+	void refreshAll();
+#endif //WITH_DSO
+
 private:
 	boost::thread thread_;
 
