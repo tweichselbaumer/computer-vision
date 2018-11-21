@@ -4,7 +4,7 @@ OutputModule::OutputModule(InputModule* pInputModule, LinkUpLabelContainer* pLin
 {
 	pFreeQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
-	pInPublishQueue_ = new boost::lockfree::queue<PublishFrame*>(queueSize);
+	pInPublishQueue_ = new boost::lockfree::queue<SlamPublishPackage*>(queueSize);
 
 	pInputModule_ = pInputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
@@ -47,6 +47,11 @@ void OutputModule::writeOut(OutputPackage* pResult)
 	pInQueue_->push(pResult);
 }
 
+void OutputModule::writeOut(SlamPublishPackage* pResult)
+{
+	pInPublishQueue_->push(pResult);
+}
+
 OutputPackage* OutputModule::nextFreeOutputPackage()
 {
 	OutputPackage* pOutputPackage;
@@ -61,16 +66,20 @@ void OutputModule::doWorkPublish()
 {
 	while (bIsRunning_)
 	{
-		PublishPackage* pPublishPackage;
-		while (!pInPublishQueue_->pop(pPublishPackage))
+		SlamPublishPackage* pSlamPublishPackage;
+		while (!pInPublishQueue_->pop(pSlamPublishPackage))
 		{
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
 
-		if (pPublishPackage->hasFrame)
+		if (pLinkUpLabelContainer_->pSlamMapEvent->isSubscribed)
 		{
-
+			uint32_t nSize;
+			uint8_t* pTemp = pSlamPublishPackage->getData(&nSize);
+			pLinkUpLabelContainer_->pSlamMapEvent->fireEvent(pTemp, nSize);
+			free(pTemp);
 		}
+		delete pSlamPublishPackage;
 	}
 }
 

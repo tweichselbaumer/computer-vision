@@ -9,6 +9,8 @@ struct LinkUpLabelContainer
 	LinkUpEventLabel* pImuEvent;
 	LinkUpEventLabel* pCameraImuEvent;
 
+	LinkUpEventLabel* pSlamMapEvent;
+
 	LinkUpPropertyLabel_Int16* pExposureLabel;
 	LinkUpPropertyLabel_Boolean* pRecodRemoteLabel;
 

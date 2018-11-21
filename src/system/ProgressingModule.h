@@ -3,6 +3,7 @@
 
 #include "InputModule.h"
 #include "OutputModule.h"
+#include "SlamPublishPackage.h"
 
 #ifdef WITH_DSO
 #include "Settings.h"

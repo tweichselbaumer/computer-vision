@@ -150,6 +150,8 @@ int main(int argc, char* argv[])
 		linkUpLabelContainer.pImuEvent = new  LinkUpEventLabel("imu_event", pLinkUpNode);
 		linkUpLabelContainer.pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
 
+		linkUpLabelContainer.pSlamMapEvent = new  LinkUpEventLabel("slam_map_event", pLinkUpNode);
+
 		linkUpLabelContainer.pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
 		linkUpLabelContainer.pRecodRemoteLabel = new LinkUpPropertyLabel_Boolean("record_remote", pLinkUpNode);
 

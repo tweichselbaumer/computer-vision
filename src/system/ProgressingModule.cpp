@@ -155,9 +155,23 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib)
 {
 	Eigen::Vector3d translation = frame->getPose().translation();
-	Eigen::Quaterniond rotation = frame->getPose().unit_quaternion();
+	Eigen::Quaterniond rotation = frame->getPose().unit_quaternion().inverse();
 
+	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
 
+	pSlamPublishPackage->frame.id = frame->id;
+	pSlamPublishPackage->frame.tx = translation.x();
+	pSlamPublishPackage->frame.ty = translation.y();
+	pSlamPublishPackage->frame.tz = translation.z();
+
+	pSlamPublishPackage->frame.q1 = rotation.w();
+	pSlamPublishPackage->frame.q2 = rotation.x();
+	pSlamPublishPackage->frame.q3 = rotation.y();
+	pSlamPublishPackage->frame.q4 = rotation.z();
+
+	pSlamPublishPackage->frame.s = 1;
+
+	pOutputModule_->writeOut(pSlamPublishPackage);
 }
 
 void ProgressingModule::setMap(shared_ptr<Map> m)
