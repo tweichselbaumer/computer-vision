@@ -5,11 +5,12 @@
 
 enum SlamPublishType : uint8_t
 {
-	FRAME_ONLY = 1
+	FRAME = 1,
+	KEYFRAME_WITH_POINTS = 2
 };
 
 PACK(SlamPublishFrame{
-	unsigned long id;
+	uint32_t id;
 	double tx;
 	double ty;
 	double tz;
@@ -20,16 +21,30 @@ PACK(SlamPublishFrame{
 	double s;
 	};)
 
-PACK(SlamPublishKeyFrame{
-	unsigned long id;
-	};)
+	PACK(SlamPublishKeyFrame{
+		uint32_t id;
+		int points;
+		double fx;
+		double fy;
+		double cx;
+		double cy;
+		};)
 
-class SlamPublishPackage
-{
-public:
-	~SlamPublishPackage();
-	uint8_t* getData(uint32_t* pSize);
-	SlamPublishFrame frame;
-};
+		PACK(SlamPublishPoint{
+			float u;
+			float v;
+			float inverseDepth;
+			uint8_t color[8];
+			};)
+
+			class SlamPublishPackage
+			{
+			public:
+				~SlamPublishPackage();
+				uint8_t* getData(uint32_t* pSize);
+				SlamPublishFrame frame;
+				SlamPublishKeyFrame* pKeyFrame = NULL;
+				std::vector<SlamPublishPoint*> points;
+			};
 
 #endif

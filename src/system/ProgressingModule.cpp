@@ -53,8 +53,8 @@ void  ProgressingModule::start()
 	fullSystem = new ldso::FullSystem(voc);
 	fullSystem->linearizeOperation = false;
 
-	viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
-	fullSystem->setViewer(viewer);
+	//viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
+	//fullSystem->setViewer(viewer);
 	fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
 
 	if (undistorter->photometricUndist != 0)
@@ -127,14 +127,14 @@ void  ProgressingModule::doWork()
 
 			shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
 			//voc->load(vocFile);
-			delete fullSystem;
+			//delete fullSystem;
 
 			fullSystem = new ldso::FullSystem(voc);
 			fullSystem->linearizeOperation = false;
 
-			fullSystem->setViewer(viewer);
+			//fullSystem->setViewer(viewer);
 			fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
-			viewer->reset();
+			//viewer->reset();
 			if (undistorter->photometricUndist != 0)
 				fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 		}
@@ -149,7 +149,51 @@ void  ProgressingModule::doWork()
 #ifdef WITH_DSO
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib)
 {
+	for (shared_ptr<Frame> frame : frames)
+	{
+		Eigen::Vector3d translation = frame->getPose().translation();
+		Eigen::Quaterniond rotation = frame->getPose().unit_quaternion().inverse();
 
+		SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
+
+		pSlamPublishPackage->frame.id = frame->id;
+		pSlamPublishPackage->frame.tx = translation.x();
+		pSlamPublishPackage->frame.ty = translation.y();
+		pSlamPublishPackage->frame.tz = translation.z();
+
+		pSlamPublishPackage->frame.q1 = rotation.w();
+		pSlamPublishPackage->frame.q2 = rotation.x();
+		pSlamPublishPackage->frame.q3 = rotation.y();
+		pSlamPublishPackage->frame.q4 = rotation.z();
+
+		pSlamPublishPackage->frame.s = 1;
+
+		pSlamPublishPackage->pKeyFrame = (SlamPublishKeyFrame*)calloc(1, sizeof(SlamPublishKeyFrame));
+		pSlamPublishPackage->pKeyFrame->id = frame->kfId;
+		pSlamPublishPackage->pKeyFrame->cx = HCalib->cxl();
+		pSlamPublishPackage->pKeyFrame->cy = HCalib->cyl();
+		pSlamPublishPackage->pKeyFrame->fx = HCalib->fxl();
+		pSlamPublishPackage->pKeyFrame->fy = HCalib->fyl();
+
+		for (auto feat : frame->features)
+		{
+			if (feat->point && feat->point->mpPH)
+			{
+				auto p = feat->point->mpPH;
+				SlamPublishPoint* pPoint = (SlamPublishPoint*)calloc(1, sizeof(SlamPublishPoint));
+				for (int i = 0; i < 8; i++)
+				{
+					pPoint->color[i] = p->color[i];
+				}
+				pPoint->u = p->u;
+				pPoint->v = p->v;
+				pPoint->inverseDepth = p->idepth_scaled;
+				pSlamPublishPackage->points.push_back(pPoint);
+			}
+		}
+
+		pOutputModule_->writeOut(pSlamPublishPackage);
+	}
 }
 
 void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib)
