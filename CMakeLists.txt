@@ -26,8 +26,8 @@ add_definitions(-DIMAGE_WIDTH=512)
 add_definitions(-DIMAGE_HEIGHT=512)
 
 set(WITH_DSO 1)
-set(WITH_CAMERA 1)
-set(WITH_EXTERN_TRIGGER 1)
+set(WITH_CAMERA 0)
+set(WITH_EXTERN_TRIGGER 0)
 
 
 IF (MSVC)
