@@ -32,7 +32,8 @@ uint8_t* SlamPublishPackage::getData(uint32_t* pSize)
 		int i = 0;
 		for (auto p : points) 
 		{
-			memcpy(pData + 1 + sizeof(SlamPublishFrame) + sizeof(SlamPublishKeyFrame) + i * sizeof(SlamPublishPoint), pKeyFrame, sizeof(SlamPublishKeyFrame));
+			memcpy(pData + 1 + sizeof(SlamPublishFrame) + sizeof(SlamPublishKeyFrame) + i * sizeof(SlamPublishPoint), p, sizeof(SlamPublishPoint));
+			i++;
 		}
 		return pData;
 	}
