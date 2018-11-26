@@ -51,7 +51,7 @@ void  ProgressingModule::start()
 	//voc->load(vocFile);
 
 	fullSystem = new ldso::FullSystem(voc);
-	fullSystem->linearizeOperation = false;
+	fullSystem->linearizeOperation = true;
 
 	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
 	fullSystem->setViewer(viewer);*/
@@ -130,11 +130,12 @@ void  ProgressingModule::doWork()
 			//delete fullSystem;
 
 			fullSystem = new ldso::FullSystem(voc);
-			fullSystem->linearizeOperation = false;
+			fullSystem->linearizeOperation = true;
 
 			//fullSystem->setViewer(viewer);
 			fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
 			//viewer->reset();
+			this->reset();
 			if (undistorter->photometricUndist != 0)
 				fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 		}
@@ -157,6 +158,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 			Eigen::Quaterniond rotation = frame->getPoseOpti().quaternion();
 
 			SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
+			pSlamPublishPackage->publishType = SlamPublishType::KEYFRAME_WITH_POINTS;
 
 			pSlamPublishPackage->frame.id = frame->id;
 			pSlamPublishPackage->frame.tx = translation.x();
@@ -222,6 +224,7 @@ void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<Calib
 	Eigen::Quaterniond rotation = frame->getPoseOpti().quaternion();
 
 	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
+	pSlamPublishPackage->publishType = SlamPublishType::FRAME;
 
 	pSlamPublishPackage->frame.id = frame->id;
 	pSlamPublishPackage->frame.tx = translation.x();
@@ -250,7 +253,10 @@ void ProgressingModule::join()
 
 void ProgressingModule::reset()
 {
+	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
+	pSlamPublishPackage->publishType = SlamPublishType::RESET;
 
+	pOutputModule_->writeOut(pSlamPublishPackage);
 }
 
 void ProgressingModule::refreshAll()

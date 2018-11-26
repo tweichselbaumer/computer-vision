@@ -6,7 +6,8 @@
 enum SlamPublishType : uint8_t
 {
 	FRAME = 1,
-	KEYFRAME_WITH_POINTS = 2
+	KEYFRAME_WITH_POINTS = 2,
+	RESET = 3,
 };
 
 PACK(SlamPublishFrame{
@@ -43,6 +44,7 @@ PACK(SlamPublishFrame{
 				~SlamPublishPackage();
 				uint8_t* getData(uint32_t* pSize);
 				SlamPublishFrame frame;
+				SlamPublishType publishType;
 				SlamPublishKeyFrame* pKeyFrame = NULL;
 				std::vector<SlamPublishPoint*> points;
 			};

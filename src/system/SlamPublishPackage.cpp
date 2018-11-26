@@ -13,28 +13,35 @@ SlamPublishPackage::~SlamPublishPackage()
 
 uint8_t* SlamPublishPackage::getData(uint32_t* pSize)
 {
-	if (pKeyFrame == NULL) 
+	if (publishType == SlamPublishType::FRAME)
 	{
 		*pSize = sizeof(SlamPublishFrame) + sizeof(SlamPublishType);
 		uint8_t* pData = (uint8_t*)calloc(*pSize, sizeof(uint8_t));
-		pData[0] = SlamPublishType::FRAME;
+		pData[0] = publishType;
 		memcpy(pData + 1, &frame, sizeof(SlamPublishFrame));
 		return pData;
 	}
-	else
+	else if (publishType == SlamPublishType::KEYFRAME_WITH_POINTS)
 	{
 		*pSize = sizeof(SlamPublishFrame) + sizeof(SlamPublishType) + sizeof(SlamPublishPoint)* points.size() + sizeof(SlamPublishKeyFrame);
 		uint8_t* pData = (uint8_t*)calloc(*pSize, sizeof(uint8_t));
-		pData[0] = SlamPublishType::KEYFRAME_WITH_POINTS;
+		pData[0] = publishType;
 		memcpy(pData + 1, &frame, sizeof(SlamPublishFrame));
 		pKeyFrame->points = points.size();
 		memcpy(pData + 1 + sizeof(SlamPublishFrame), pKeyFrame, sizeof(SlamPublishKeyFrame));
 		int i = 0;
-		for (auto p : points) 
+		for (auto p : points)
 		{
 			memcpy(pData + 1 + sizeof(SlamPublishFrame) + sizeof(SlamPublishKeyFrame) + i * sizeof(SlamPublishPoint), p, sizeof(SlamPublishPoint));
 			i++;
 		}
+		return pData;
+	}
+	else if (publishType == SlamPublishType::RESET)
+	{
+		*pSize = sizeof(SlamPublishType);
+		uint8_t* pData = (uint8_t*)calloc(*pSize, sizeof(uint8_t));
+		pData[0] = publishType;
 		return pData;
 	}
 }
