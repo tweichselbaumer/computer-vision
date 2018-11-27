@@ -56,7 +56,7 @@ private:
 	ldso::Undistort* undistorter = 0;
 	shared_ptr<PangolinDSOViewer> viewer = 0;
 	int frameID = 0;
-
+	bool singleThread = false;
 #ifdef __linux
 	std::string calib = "/opt/firefly/camera.txt";
 	std::string vignetteFile = "/opt/firefly/vignette.png";

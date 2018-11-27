@@ -11,8 +11,8 @@ void  ProgressingModule::start()
 {
 
 #ifdef WITH_DSO
-	ldso::setting_desiredImmatureDensity = 750;
-	ldso::setting_desiredPointDensity = 1000;
+	ldso::setting_desiredImmatureDensity = 1500;
+	ldso::setting_desiredPointDensity = 2000;
 	ldso::setting_minFrames = 5;
 	ldso::setting_maxFrames = 7;
 	ldso::setting_maxOptIterations = 6;
@@ -22,12 +22,14 @@ void  ProgressingModule::start()
 
 	ldso::setting_pointSelection = 0;
 
-	//ldso::benchmarkSetting_width = 256;
-	//ldso::benchmarkSetting_height = 256;
+	/*ldso::benchmarkSetting_width = 256;
+	ldso::benchmarkSetting_height = 256;*/
+
+	setting_reTrackThreshold = 2;
 
 	ldso::setting_photometricCalibration = 2;
-	ldso::setting_affineOptModeA = 1;
-	ldso::setting_affineOptModeB = 1;
+	/*ldso::setting_affineOptModeA = 0;
+	ldso::setting_affineOptModeB = 0;*/
 	ldso::setting_enableLoopClosing = false;
 
 	ldso::setting_debugout_runquiet = true;
@@ -43,7 +45,7 @@ void  ProgressingModule::start()
 	//voc->load(vocFile);
 
 	fullSystem = new ldso::FullSystem(voc);
-	fullSystem->linearizeOperation = false;
+	fullSystem->linearizeOperation = singleThread;
 	this->reset();
 	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
 	fullSystem->setViewer(viewer);*/
@@ -93,9 +95,9 @@ ImuData ProgressingModule::convertImu(RawImuData raw)
 void  ProgressingModule::doWork()
 {
 	int i = 0;
-
 	while (bIsRunning_)
 	{
+
 		FramePackage* pFramePackage = pInputModule_->next();
 		OutputPackage* pOutputPackage = pOutputModule_->nextFreeOutputPackage();
 		pOutputPackage->pFramePackage = pFramePackage;
@@ -122,7 +124,7 @@ void  ProgressingModule::doWork()
 			//delete fullSystem;
 
 			fullSystem = new ldso::FullSystem(voc);
-			fullSystem->linearizeOperation = false;
+			fullSystem->linearizeOperation = singleThread;
 
 			//fullSystem->setViewer(viewer);
 			fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
