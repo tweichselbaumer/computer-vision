@@ -11,8 +11,8 @@ void  ProgressingModule::start()
 {
 
 #ifdef WITH_DSO
-	ldso::setting_desiredImmatureDensity = 1500;
-	ldso::setting_desiredPointDensity = 2000;
+	ldso::setting_desiredImmatureDensity = 750;
+	ldso::setting_desiredPointDensity = 1000;
 	ldso::setting_minFrames = 5;
 	ldso::setting_maxFrames = 7;
 	ldso::setting_maxOptIterations = 6;
@@ -20,18 +20,10 @@ void  ProgressingModule::start()
 	ldso::setting_logStuff = false;
 	ldso::setting_kfGlobalWeight = 1.3;
 
-
-	ldso::setting_desiredImmatureDensity = 600;
-	ldso::setting_desiredPointDensity = 800;
-	ldso::setting_minFrames = 4;
-	ldso::setting_maxFrames = 6;
-	ldso::setting_maxOptIterations = 4;
-	ldso::setting_minOptIterations = 1;
-
 	ldso::setting_pointSelection = 0;
 
-	ldso::benchmarkSetting_width = 256;
-	ldso::benchmarkSetting_height = 256;
+	//ldso::benchmarkSetting_width = 256;
+	//ldso::benchmarkSetting_height = 256;
 
 	ldso::setting_photometricCalibration = 2;
 	ldso::setting_affineOptModeA = 1;
@@ -144,6 +136,7 @@ void  ProgressingModule::doWork()
 #endif //WITH_DSO
 
 		pOutputModule_->writeOut(pOutputPackage);
+
 	}
 }
 

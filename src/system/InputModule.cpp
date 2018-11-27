@@ -84,7 +84,6 @@ void InputModule::start()
 #ifdef EXTERN_CAMERA_TRIGGER
 	//doCamInitSequence();
 #endif //EXTERN_CAMERA_TRIGGER
-
 	cameraThread_ = boost::thread(boost::bind(&InputModule::doWorkCamera, this));
 #endif //WITH_CAMERA
 
@@ -207,17 +206,17 @@ void InputModule::doWorkCamera()
 
 				pOutQueue_->push(pFramePackage);
 #endif //EXTERN_CAMERA_TRIGGER
+				}
 			}
-		}
 		else
 		{
 			int debug = 1;
 		}
 
 		//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-	}
+		}
 #endif //WITH_CAMERA
-}
+	}
 
 void InputModule::doWork()
 {

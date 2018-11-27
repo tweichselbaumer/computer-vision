@@ -67,7 +67,7 @@
       "remoteCopySourcesExclusionList": ["bin","lib"],
       "remoteCopySourcesConcurrentCopies": "10",
       "remoteCopySourcesMethod": "rsync",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-j 4",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux-x64", "includes" ]
