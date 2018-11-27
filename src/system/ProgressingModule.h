@@ -57,9 +57,16 @@ private:
 	shared_ptr<PangolinDSOViewer> viewer = 0;
 	int frameID = 0;
 
+#ifdef __linux
+	std::string calib = "/opt/firefly/camera.txt";
+	std::string vignetteFile = "/opt/firefly/vignette.png";
+	std::string gammaFile = "/opt/firefly/pcalib.txt";
+#else
 	std::string calib = "camera.txt";
 	std::string vignetteFile = "vignette.png";
 	std::string gammaFile = "pcalib.txt";
+#endif //__linux
+
 #endif //WITH_DSO
 };
 

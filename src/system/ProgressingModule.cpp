@@ -51,8 +51,8 @@ void  ProgressingModule::start()
 	//voc->load(vocFile);
 
 	fullSystem = new ldso::FullSystem(voc);
-	fullSystem->linearizeOperation = true;
-
+	fullSystem->linearizeOperation = false;
+	this->reset();
 	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
 	fullSystem->setViewer(viewer);*/
 	fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
@@ -130,7 +130,7 @@ void  ProgressingModule::doWork()
 			//delete fullSystem;
 
 			fullSystem = new ldso::FullSystem(voc);
-			fullSystem->linearizeOperation = true;
+			fullSystem->linearizeOperation = false;
 
 			//fullSystem->setViewer(viewer);
 			fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
@@ -220,8 +220,8 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 
 void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib)
 {
-	Eigen::Vector3d translation = frame->getPoseOpti().translation();
-	Eigen::Quaterniond rotation = frame->getPoseOpti().quaternion();
+	Eigen::Vector3d translation = frame->getPose().translation();
+	Eigen::Quaterniond rotation = frame->getPose().unit_quaternion();
 
 	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
 	pSlamPublishPackage->publishType = SlamPublishType::FRAME;
