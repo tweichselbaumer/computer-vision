@@ -14,7 +14,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-j 4",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": ""
     },
@@ -25,7 +25,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-j 4",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": ""
     },
@@ -46,7 +46,7 @@
       "remoteCopySourcesConcurrentCopies": "10",
       "remoteCopySourcesExclusionList": [ "bin", "lib" ],
       "remoteCopySourcesMethod": "rsync",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-j 4",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux-x64", "includes" ]

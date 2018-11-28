@@ -9,6 +9,8 @@ struct LinkUpLabelContainer
 	LinkUpEventLabel* pImuEvent;
 	LinkUpEventLabel* pCameraImuEvent;
 
+	LinkUpEventLabel* pImuDerivedEvent;
+
 	LinkUpEventLabel* pSlamMapEvent;
 
 	LinkUpPropertyLabel_Int16* pExposureLabel;
@@ -22,6 +24,10 @@ struct LinkUpLabelContainer
 	LinkUpPropertyLabel_Double* pGyroscopeScaleLabel;
 	LinkUpPropertyLabel_Double* pTemperatureScaleLabel;
 	LinkUpPropertyLabel_Double* pTemperatureOffsetLabel;
+
+	LinkUpPropertyLabel_Int32* pImuFilterSizeLabel;
+	LinkUpPropertyLabel_Binary* pImuFilterALabel;
+	LinkUpPropertyLabel_Binary* pImuFilterBLabel;
 };
 
 #endif

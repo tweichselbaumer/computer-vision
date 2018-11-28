@@ -25,6 +25,11 @@ public:
 		double temperature_scale;
 		double temperature_offset;
 	}imu_parameter;
+	struct {
+		double a[50];
+		double b[50];
+		int n;
+	}imu_filter_paramerter;
 	bool recordRemote;
 private:
 	string filename_;

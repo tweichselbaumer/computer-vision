@@ -1,10 +1,17 @@
 #include "ProgressingModule.h"
 
-ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer)
+ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings)
 {
 	pInputModule_ = pInputModule;
 	pOutputModule_ = pOutputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
+	pSettings_ = pSettings;
+	_pImuFilterGx = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
+	_pImuFilterGy = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
+	_pImuFilterGz = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
+	_pImuFilterAx = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
+	_pImuFilterAy = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
+	_pImuFilterAz = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
 }
 
 void  ProgressingModule::start()
@@ -92,6 +99,23 @@ ImuData ProgressingModule::convertImu(RawImuData raw)
 	return result;
 }
 
+ImuDataDerived ProgressingModule::derivedImu(ImuData data)
+{
+	ImuDataDerived result = {};
+
+	result.timestamp = data.timestamp;
+
+	result.gx = _pImuFilterGx->next(data.gx);
+	result.gy = _pImuFilterGy->next(data.gy);
+	result.gz = _pImuFilterGz->next(data.gz);
+
+	result.ax = _pImuFilterAx->next(data.ax);
+	result.ay = _pImuFilterAy->next(data.ay);
+	result.az = _pImuFilterAz->next(data.az);
+
+	return result;
+}
+
 void  ProgressingModule::doWork()
 {
 	int i = 0;
@@ -103,6 +127,7 @@ void  ProgressingModule::doWork()
 		pOutputPackage->pFramePackage = pFramePackage;
 
 		pOutputPackage->imuData = convertImu(pOutputPackage->pFramePackage->imu);
+		pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
 
 #ifdef WITH_DSO
 

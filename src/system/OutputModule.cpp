@@ -112,6 +112,12 @@ void OutputModule::doWork()
 		{
 			pLinkUpLabelContainer_->pImuEvent->fireEvent((uint8_t*)&(pOutputPackage->pFramePackage->imu), sizeof(RawImuData));
 		}
+
+		if (pLinkUpLabelContainer_->pImuDerivedEvent->isSubscribed)
+		{
+			pLinkUpLabelContainer_->pImuDerivedEvent->fireEvent((uint8_t*)&(pOutputPackage->imuDataDerived), sizeof(ImuDataDerived));
+		}
+
 		if (pLinkUpLabelContainer_->pCameraImuEvent->isSubscribed)
 		{
 			if (pOutputPackage->pFramePackage->imu.cam)

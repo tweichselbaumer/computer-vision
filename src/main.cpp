@@ -87,6 +87,10 @@ void loadSettings()
 	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(pSettings->imu_parameter.gyroscope_scale);
 	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(pSettings->imu_parameter.temperature_offset);
 	linkUpLabelContainer.pTemperatureScaleLabel->setValue(pSettings->imu_parameter.temperature_scale);
+
+	linkUpLabelContainer.pImuFilterALabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.a);
+	linkUpLabelContainer.pImuFilterBLabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.b);
+	linkUpLabelContainer.pImuFilterSizeLabel->setValue(pSettings->imu_filter_paramerter.n);
 }
 
 void updateSettings()
@@ -97,6 +101,10 @@ void updateSettings()
 	pSettings->imu_parameter.gyroscope_scale = linkUpLabelContainer.pGyroscopeScaleLabel->getValue();
 	pSettings->imu_parameter.temperature_scale = linkUpLabelContainer.pTemperatureScaleLabel->getValue();
 	pSettings->imu_parameter.temperature_offset = linkUpLabelContainer.pTemperatureOffsetLabel->getValue();
+
+	memcpy(pSettings->imu_filter_paramerter.a, linkUpLabelContainer.pImuFilterALabel->getValue(), 50 * sizeof(double));
+	memcpy(pSettings->imu_filter_paramerter.b, linkUpLabelContainer.pImuFilterBLabel->getValue(), 50 * sizeof(double));
+	pSettings->imu_filter_paramerter.n = linkUpLabelContainer.pImuFilterSizeLabel->getValue();
 
 	pSettings->save();
 }
@@ -137,82 +145,92 @@ int main(int argc, char* argv[])
 {
 	/*try
 	{*/
-		FLAGS_logtostderr = 1;
-		FLAGS_log_dir = ".";
-		FLAGS_minloglevel = 0;
-		google::InitGoogleLogging(argv[0]);
+	FLAGS_logtostderr = 1;
+	FLAGS_log_dir = ".";
+	FLAGS_minloglevel = 0;
+	google::InitGoogleLogging(argv[0]);
 
-		LOG(INFO) << "starting computer-vision...";
-		pSettings = new Settings("/opt/firefly/config.json");
-		pLinkUpNode = new LinkUpNode("computer_vision");
+	LOG(INFO) << "starting computer-vision...";
+#ifdef __linux
+	pSettings = new Settings("/opt/firefly/config.json");
+#else
+	pSettings = new Settings("config.json");
+#endif
+	pLinkUpNode = new LinkUpNode("computer_vision");
 
-		linkUpLabelContainer.pCameraEvent = new  LinkUpEventLabel("camera_event", pLinkUpNode);
-		linkUpLabelContainer.pImuEvent = new  LinkUpEventLabel("imu_event", pLinkUpNode);
-		linkUpLabelContainer.pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
+	linkUpLabelContainer.pCameraEvent = new  LinkUpEventLabel("camera_event", pLinkUpNode);
+	linkUpLabelContainer.pImuEvent = new  LinkUpEventLabel("imu_event", pLinkUpNode);
+	linkUpLabelContainer.pCameraImuEvent = new  LinkUpEventLabel("camera_imu_event", pLinkUpNode);
 
-		linkUpLabelContainer.pSlamMapEvent = new  LinkUpEventLabel("slam_map_event", pLinkUpNode);
+	linkUpLabelContainer.pImuDerivedEvent = new LinkUpEventLabel("imu_derived_event", pLinkUpNode);
 
-		linkUpLabelContainer.pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
-		linkUpLabelContainer.pRecodRemoteLabel = new LinkUpPropertyLabel_Boolean("record_remote", pLinkUpNode);
+	linkUpLabelContainer.pSlamMapEvent = new  LinkUpEventLabel("slam_map_event", pLinkUpNode);
 
-		linkUpLabelContainer.pAccelerometerScaleLabel = new LinkUpPropertyLabel_Double("acc_scale", pLinkUpNode);
-		linkUpLabelContainer.pGyroscopeScaleLabel = new LinkUpPropertyLabel_Double("gyro_scale", pLinkUpNode);
-		linkUpLabelContainer.pTemperatureScaleLabel = new LinkUpPropertyLabel_Double("temp_scale", pLinkUpNode);
-		linkUpLabelContainer.pTemperatureOffsetLabel = new LinkUpPropertyLabel_Double("temp_offset", pLinkUpNode);
+	linkUpLabelContainer.pExposureLabel = new LinkUpPropertyLabel_Int16("camera_exposure", pLinkUpNode);
+	linkUpLabelContainer.pRecodRemoteLabel = new LinkUpPropertyLabel_Boolean("record_remote", pLinkUpNode);
 
-		linkUpLabelContainer.pReceiveReplayDataLabel = new LinkUpFunctionLabel("replay_data", pLinkUpNode);
-		linkUpLabelContainer.pGetChessboardCornerLabel = new LinkUpFunctionLabel("get_chessboard_corner", pLinkUpNode);
-		linkUpLabelContainer.pUpdateSettingsLabel = new LinkUpFunctionLabel("update_settings", pLinkUpNode);
+	linkUpLabelContainer.pAccelerometerScaleLabel = new LinkUpPropertyLabel_Double("acc_scale", pLinkUpNode);
+	linkUpLabelContainer.pGyroscopeScaleLabel = new LinkUpPropertyLabel_Double("gyro_scale", pLinkUpNode);
+	linkUpLabelContainer.pTemperatureScaleLabel = new LinkUpPropertyLabel_Double("temp_scale", pLinkUpNode);
+	linkUpLabelContainer.pTemperatureOffsetLabel = new LinkUpPropertyLabel_Double("temp_offset", pLinkUpNode);
 
-		loadSettings();
+	linkUpLabelContainer.pReceiveReplayDataLabel = new LinkUpFunctionLabel("replay_data", pLinkUpNode);
+	linkUpLabelContainer.pGetChessboardCornerLabel = new LinkUpFunctionLabel("get_chessboard_corner", pLinkUpNode);
+	linkUpLabelContainer.pUpdateSettingsLabel = new LinkUpFunctionLabel("update_settings", pLinkUpNode);
 
-		boost::shared_ptr<boost::asio::io_service::work> work(
-			new boost::asio::io_service::work(io_service)
-		);
+	linkUpLabelContainer.pImuFilterSizeLabel = new LinkUpPropertyLabel_Int32("imu_filter_n", pLinkUpNode);
+	linkUpLabelContainer.pImuFilterALabel = new LinkUpPropertyLabel_Binary("imu_filter_a", sizeof(double) * 50, pLinkUpNode);
+	linkUpLabelContainer.pImuFilterBLabel = new LinkUpPropertyLabel_Binary("imu_filter_b", sizeof(double) * 50, pLinkUpNode);
 
-		pTcpServer = new TcpServer(io_service, 3000, pLinkUpNode, 1);
+	loadSettings();
 
-		std::cout << "Press [return] to exit." << std::endl;
+	boost::shared_ptr<boost::asio::io_service::work> work(
+		new boost::asio::io_service::work(io_service)
+	);
 
-		pInputModule = new InputModule(io_service, &linkUpLabelContainer);
-		pOutputModule = new OutputModule(pInputModule, &linkUpLabelContainer);
-		pProgressingModule = new ProgressingModule(pInputModule, pOutputModule, &linkUpLabelContainer);
+	pTcpServer = new TcpServer(io_service, 3000, pLinkUpNode, 1);
 
-		linkUpLabelContainer.pReceiveReplayDataLabel->setFunction(&onReplayData);
-		linkUpLabelContainer.pGetChessboardCornerLabel->setFunction(&onChessboardCorner);
-		linkUpLabelContainer.pUpdateSettingsLabel->setFunction(&onUpdateSettings);
+	std::cout << "Press [return] to exit." << std::endl;
 
-		boost::thread_group worker_threads;
-		worker_threads.create_thread(doWork);
-		worker_threads.create_thread(linkUpWorkerNormal);
-		worker_threads.create_thread(linkUpWorkerAdvanced);
+	pInputModule = new InputModule(io_service, &linkUpLabelContainer);
+	pOutputModule = new OutputModule(pInputModule, &linkUpLabelContainer);
+	pProgressingModule = new ProgressingModule(pInputModule, pOutputModule, &linkUpLabelContainer, pSettings);
 
-		pInputModule->start();
-		pOutputModule->start();
-		pProgressingModule->start();
+	linkUpLabelContainer.pReceiveReplayDataLabel->setFunction(&onReplayData);
+	linkUpLabelContainer.pGetChessboardCornerLabel->setFunction(&onChessboardCorner);
+	linkUpLabelContainer.pUpdateSettingsLabel->setFunction(&onUpdateSettings);
+
+	boost::thread_group worker_threads;
+	worker_threads.create_thread(doWork);
+	worker_threads.create_thread(linkUpWorkerNormal);
+	worker_threads.create_thread(linkUpWorkerAdvanced);
+
+	pInputModule->start();
+	pOutputModule->start();
+	pProgressingModule->start();
 
 #ifdef __linux
-		if (!isatty(fileno(stdin)))
-		{
-			while (true)
-				boost::this_thread::sleep_for(boost::chrono::seconds(1));
-		}
+	if (!isatty(fileno(stdin)))
+	{
+		while (true)
+			boost::this_thread::sleep_for(boost::chrono::seconds(1));
+	}
 #endif
-		std::cin.get();
+	std::cin.get();
 
-		updateSettings();
+	updateSettings();
 
-		running = false;
-		io_service.stop();
+	running = false;
+	io_service.stop();
 
-		worker_threads.join_all();
+	worker_threads.join_all();
 
-		pInputModule->stop();
-		pOutputModule->stop();
-		pProgressingModule->stop();
+	pInputModule->stop();
+	pOutputModule->stop();
+	pProgressingModule->stop();
 
 
-		return 0;
+	return 0;
 	/*}
 	catch (std::exception& e)
 	{

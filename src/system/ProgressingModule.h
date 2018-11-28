@@ -12,6 +12,9 @@
 #include "frontend/OutputWrapper.h"
 #include "frontend/DSOViewer.h"
 
+#include "../dsp/IIR.h"
+#include "../io/Settings.h"
+
 //#ifdef __linux
 
 //#endif //__linux
@@ -26,7 +29,7 @@ class ProgressingModule
 #endif //WITH_DSO
 {
 public:
-	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer);
+	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings);
 	void start();
 	void stop();
 
@@ -44,12 +47,21 @@ private:
 
 	void doWork();
 	ImuData convertImu(RawImuData imuData);
+	ImuDataDerived derivedImu(ImuData imuData);
 
 	bool bIsRunning_ = false;
 
 	InputModule* pInputModule_ = 0;
 	OutputModule* pOutputModule_ = 0;
-	LinkUpLabelContainer* pLinkUpLabelContainer_;
+	LinkUpLabelContainer* pLinkUpLabelContainer_ = 0;
+	Settings* pSettings_ = 0;
+
+	IIR* _pImuFilterGx;
+	IIR* _pImuFilterGy;
+	IIR* _pImuFilterGz;
+	IIR* _pImuFilterAx;
+	IIR* _pImuFilterAy;
+	IIR* _pImuFilterAz;
 
 #ifdef WITH_DSO
 	ldso::FullSystem* fullSystem = 0;
