@@ -3,9 +3,11 @@
 Convolution::Convolution(double *pH, int nSize)
 {
 	this->nSize_ = nSize;
-	this->pH_ = (double*)calloc(nSize, sizeof(double) * 2);
-	this->pX_ = (double*)calloc(nSize, sizeof(double) * 2);
-	memcpy(this->pH_, pH, nSize);
+	this->pH_ = (double*)calloc(nSize * 2, sizeof(double));
+	this->pX_ = (double*)calloc(nSize * 2, sizeof(double));
+	memcpy(this->pH_, pH, nSize * sizeof(double));
+	memcpy(this->pH_ + nSize, pH, nSize * sizeof(double));
+	nPtr_ = 0;
 }
 
 Convolution::~Convolution()

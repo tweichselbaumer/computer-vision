@@ -11,7 +11,8 @@ void LinkUpPropertyLabel::receivedPropertyGetRequest(LinkUpRaw* pConnector)
 
 	logic->nLogicType = LinkUpLogicType::PropertyGetResponse;
 	getResponse->nIdentifier = nIdentifier;
-	memcpy(getResponse->pData, getRaw(), nSize);
+	if (nSize > 0)
+		memcpy(getResponse->pData, getRaw(nSize), nSize);
 
 	pConnector->send(packet);
 
@@ -20,7 +21,7 @@ void LinkUpPropertyLabel::receivedPropertyGetRequest(LinkUpRaw* pConnector)
 void LinkUpPropertyLabel::receivedPropertySetRequest(uint8_t* pValue, uint32_t nSize, LinkUpRaw* pConnector)
 {
 	LinkUpPacket packet;
-	packet.nLength = nSize + sizeof(LinkUpLogic) + sizeof(LinkUpPropertySetResponse);
+	packet.nLength = sizeof(LinkUpLogic) + sizeof(LinkUpPropertySetResponse);
 	packet.pData = (uint8_t*)calloc(packet.nLength, sizeof(uint8_t));
 
 	LinkUpLogic* logic = (LinkUpLogic*)packet.pData;
@@ -29,7 +30,11 @@ void LinkUpPropertyLabel::receivedPropertySetRequest(uint8_t* pValue, uint32_t n
 	logic->nLogicType = LinkUpLogicType::PropertySetResponse;
 	setResponse->nIdentifier = nIdentifier;
 
-	memcpy(getRaw(), pValue, nSize);
+	if (nSize > 0)
+	{
+		memcpy(getRaw(nSize), pValue, nSize);
+	}
+
 
 	pConnector->send(packet);
 
@@ -57,7 +62,7 @@ uint8_t * LinkUpPropertyLabel::getOptions(uint8_t* pSize) {
 	return pData;
 }
 
-uint8_t * LinkUpPropertyLabel_Boolean::getRaw() {
+uint8_t * LinkUpPropertyLabel_Boolean::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -73,7 +78,7 @@ LinkUpPropertyLabel_Boolean::LinkUpPropertyLabel_Boolean(const char* pName, Link
 	init(pName, LinkUpPropertyType::Boolean, 1, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_Int8::getRaw() {
+uint8_t * LinkUpPropertyLabel_Int8::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -88,7 +93,7 @@ LinkUpPropertyLabel_Int8::LinkUpPropertyLabel_Int8(const char* pName, LinkUpNode
 	init(pName, LinkUpPropertyType::Int8, 1, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_UInt8::getRaw() {
+uint8_t * LinkUpPropertyLabel_UInt8::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -104,7 +109,7 @@ LinkUpPropertyLabel_UInt8::LinkUpPropertyLabel_UInt8(const char* pName, LinkUpNo
 	init(pName, LinkUpPropertyType::UInt8, 1, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_Int16::getRaw() {
+uint8_t * LinkUpPropertyLabel_Int16::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -118,7 +123,7 @@ LinkUpPropertyLabel_Int16::LinkUpPropertyLabel_Int16(const char* pName, LinkUpNo
 	init(pName, LinkUpPropertyType::Int16, 2, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_UInt16::getRaw() {
+uint8_t * LinkUpPropertyLabel_UInt16::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -131,7 +136,7 @@ void LinkUpPropertyLabel_UInt16::setValue(uint16_t nNewValue) {
 LinkUpPropertyLabel_UInt16::LinkUpPropertyLabel_UInt16(const char* pName, LinkUpNode* pParent) {
 	init(pName, LinkUpPropertyType::UInt16, 4, pParent);
 }
-uint8_t * LinkUpPropertyLabel_Int32::getRaw() {
+uint8_t * LinkUpPropertyLabel_Int32::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -145,7 +150,7 @@ LinkUpPropertyLabel_Int32::LinkUpPropertyLabel_Int32(const char* pName, LinkUpNo
 	init(pName, LinkUpPropertyType::Int32, 4, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_UInt32::getRaw() {
+uint8_t * LinkUpPropertyLabel_UInt32::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -159,7 +164,7 @@ LinkUpPropertyLabel_UInt32::LinkUpPropertyLabel_UInt32(const char* pName, LinkUp
 	init(pName, LinkUpPropertyType::UInt32, 4, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_Int64::getRaw() {
+uint8_t * LinkUpPropertyLabel_Int64::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -173,7 +178,7 @@ LinkUpPropertyLabel_Int64::LinkUpPropertyLabel_Int64(const char* pName, LinkUpNo
 	init(pName, LinkUpPropertyType::Int64, 8, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_UInt64::getRaw() {
+uint8_t * LinkUpPropertyLabel_UInt64::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -187,7 +192,7 @@ LinkUpPropertyLabel_UInt64::LinkUpPropertyLabel_UInt64(const char* pName, LinkUp
 	init(pName, LinkUpPropertyType::UInt64, 8, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_Single::getRaw() {
+uint8_t * LinkUpPropertyLabel_Single::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -201,7 +206,7 @@ LinkUpPropertyLabel_Single::LinkUpPropertyLabel_Single(const char* pName, LinkUp
 	init(pName, LinkUpPropertyType::Single, 4, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_Double::getRaw() {
+uint8_t * LinkUpPropertyLabel_Double::getRaw(uint16_t nSize) {
 	return ((uint8_t*)&nValue);
 }
 
@@ -215,23 +220,67 @@ LinkUpPropertyLabel_Double::LinkUpPropertyLabel_Double(const char* pName, LinkUp
 	init(pName, LinkUpPropertyType::Double, 8, pParent);
 }
 
-uint8_t * LinkUpPropertyLabel_Binary::getRaw() {
+uint8_t * LinkUpPropertyLabel_Binary::getRaw(uint16_t nSize)
+{
+	if (nSize != this->nSize) {
+		this->nSize = nSize;
+
+		if (pValue)
+			free(pValue);
+
+		if (nSize > 0)
+			pValue = (uint8_t*)calloc(nSize, sizeof(uint8_t));
+		else
+			pValue = 0;
+	}
 	return pValue;
 }
 
-uint8_t* LinkUpPropertyLabel_Binary::getValue() {
+uint8_t* LinkUpPropertyLabel_Binary::getValue(uint16_t* pSize)
+{
+	lock();
 	uint8_t *pTemp = (uint8_t*)calloc(nSize, sizeof(uint8_t));
 	memcpy(pTemp, pValue, nSize);
+	*pSize = nSize;
+	unlock();
 	return pTemp;
 }
-void LinkUpPropertyLabel_Binary::setValue(uint8_t* pNewValue) {
-	memcpy(pValue, pNewValue, nSize);
+void LinkUpPropertyLabel_Binary::setValue(uint8_t* pNewValue, uint16_t nSize)
+{
+	lock();
+	if (nSize != this->nSize)
+	{
+		this->nSize = nSize;
+
+		if (pValue)
+			free(pValue);
+
+		if (nSize > 0)
+			pValue = (uint8_t*)calloc(nSize, sizeof(uint8_t));
+		else
+			pValue = 0;
+	}
+	if (nSize > 0)
+		memcpy(pValue, pNewValue, nSize);
+	unlock();
 }
-LinkUpPropertyLabel_Binary::LinkUpPropertyLabel_Binary(const char* pName, uint16_t nSize, LinkUpNode* pParent) {
-	pValue = (uint8_t*)calloc(nSize, sizeof(uint8_t));
+LinkUpPropertyLabel_Binary::LinkUpPropertyLabel_Binary(const char* pName, uint16_t nSize, LinkUpNode* pParent)
+{
+	if (nSize > 0)
+	{
+		pValue = (uint8_t*)calloc(nSize, sizeof(uint8_t));
+	}
+	else 
+	{
+		pValue = 0;
+	}
 	init(pName, LinkUpPropertyType::Binary, nSize, pParent);
 }
 
-LinkUpPropertyLabel_Binary::~LinkUpPropertyLabel_Binary() {
-	free(pValue);
+LinkUpPropertyLabel_Binary::~LinkUpPropertyLabel_Binary()
+{
+	if (pValue)
+	{
+		free(pValue);
+	}
 }

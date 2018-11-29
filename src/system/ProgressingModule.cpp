@@ -1,17 +1,22 @@
 #include "ProgressingModule.h"
 
+ProgressingModule::~ProgressingModule() 
+{
+
+}
+
 ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings)
 {
 	pInputModule_ = pInputModule;
 	pOutputModule_ = pOutputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
 	pSettings_ = pSettings;
-	_pImuFilterGx = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
-	_pImuFilterGy = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
-	_pImuFilterGz = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
-	_pImuFilterAx = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
-	_pImuFilterAy = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
-	_pImuFilterAz = new IIR(pSettings->imu_filter_paramerter.a, pSettings->imu_filter_paramerter.b, pSettings->imu_filter_paramerter.n);
+	_pImuFilterGx = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+	_pImuFilterGy = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+	_pImuFilterGz = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+	_pImuFilterAx = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+	_pImuFilterAy = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+	_pImuFilterAz = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
 }
 
 void  ProgressingModule::start()
@@ -53,10 +58,11 @@ void  ProgressingModule::start()
 
 	fullSystem = new ldso::FullSystem(voc);
 	fullSystem->linearizeOperation = singleThread;
-	this->reset();
-	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));
-	fullSystem->setViewer(viewer);*/
-	fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
+
+	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));*/
+	viewer = std::shared_ptr<ldso::OutputWrapper>(this);
+	viewer->reset();
+	fullSystem->setViewer(viewer);
 
 	if (undistorter->photometricUndist != 0)
 		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
@@ -119,9 +125,9 @@ ImuDataDerived ProgressingModule::derivedImu(ImuData data)
 void  ProgressingModule::doWork()
 {
 	int i = 0;
+	bool hasMotion = true;
 	while (bIsRunning_)
 	{
-
 		FramePackage* pFramePackage = pInputModule_->next();
 		OutputPackage* pOutputPackage = pOutputModule_->nextFreeOutputPackage();
 		pOutputPackage->pFramePackage = pFramePackage;
@@ -133,11 +139,15 @@ void  ProgressingModule::doWork()
 
 		if (pFramePackage->imu.cam)
 		{
-			ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
-			ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp, 1.0f);
-			fullSystem->addActiveFrame(undistImg, frameID++);
 
-			delete undistImg;
+			if (fullSystem->initialized || hasMotion)
+			{
+				ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
+				ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp, 1.0f);
+				fullSystem->addActiveFrame(undistImg, frameID++);
+
+				delete undistImg;
+			}
 		}
 
 		if (fullSystem->isLost || ldso::setting_fullResetRequested)
@@ -146,14 +156,13 @@ void  ProgressingModule::doWork()
 
 			shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
 			//voc->load(vocFile);
-			//delete fullSystem;
+			delete fullSystem;
 
 			fullSystem = new ldso::FullSystem(voc);
 			fullSystem->linearizeOperation = singleThread;
 
-			//fullSystem->setViewer(viewer);
-			fullSystem->setViewer(std::shared_ptr<ldso::OutputWrapper>(this));
-			//viewer->reset();
+			fullSystem->setViewer(viewer);
+			viewer->reset();
 			this->reset();
 			if (undistorter->photometricUndist != 0)
 				fullSystem->setGammaFunction(undistorter->photometricUndist->getG());

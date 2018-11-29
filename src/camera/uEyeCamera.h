@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include "Camera.h"
+#include <glog/logging.h>
 
 class uEyeCamera :public Camera
 {

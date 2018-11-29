@@ -39,7 +39,14 @@ void Settings::load()
 			int i = 0;
 			for (json::iterator it = j["imu_filter_paramerter"]["a"].begin(); it != j["imu_filter_paramerter"]["a"].end(); ++it)
 			{
-				imu_filter_paramerter.a[i++] = (double)*it;
+				i++;
+			}
+			imu_filter_paramerter.nA = i;
+			imu_filter_paramerter.pA = (double*)calloc(imu_filter_paramerter.nA, sizeof(double));
+			i = 0;
+			for (json::iterator it = j["imu_filter_paramerter"]["a"].begin(); it != j["imu_filter_paramerter"]["a"].end(); ++it)
+			{
+				imu_filter_paramerter.pA[i++] = (double)*it;
 			}
 		}
 		if (j["imu_filter_paramerter"]["b"].is_array())
@@ -47,7 +54,14 @@ void Settings::load()
 			int i = 0;
 			for (json::iterator it = j["imu_filter_paramerter"]["b"].begin(); it != j["imu_filter_paramerter"]["b"].end(); ++it)
 			{
-				imu_filter_paramerter.b[i++] = (double)*it;
+				i++;
+			}
+			imu_filter_paramerter.nB = i;
+			imu_filter_paramerter.pB = (double*)calloc(imu_filter_paramerter.nB, sizeof(double));
+			i = 0;
+			for (json::iterator it = j["imu_filter_paramerter"]["b"].begin(); it != j["imu_filter_paramerter"]["b"].end(); ++it)
+			{
+				imu_filter_paramerter.pB[i++] = (double)*it;
 			}
 		}
 	}
@@ -65,17 +79,15 @@ void Settings::save()
 	j["imu_parameter"]["temperature_offset"] = imu_parameter.temperature_offset;
 	j["record_remote"] = recordRemote;
 
-	for (int i = 0; i < imu_filter_paramerter.n; i++)
+	for (int i = 0; i < imu_filter_paramerter.nA; i++)
 	{
-		j["imu_filter_paramerter"]["a"].push_back(imu_filter_paramerter.a[i]);
+		j["imu_filter_paramerter"]["a"].push_back(imu_filter_paramerter.pA[i]);
 	}
 
-	for (int i = 0; i < imu_filter_paramerter.n; i++)
+	for (int i = 0; i < imu_filter_paramerter.nB; i++)
 	{
-		j["imu_filter_paramerter"]["b"].push_back(imu_filter_paramerter.b[i]);
+		j["imu_filter_paramerter"]["b"].push_back(imu_filter_paramerter.pB[i]);
 	}
-
-	j["imu_filter_paramerter"]["n"] = imu_filter_paramerter.n;
 
 	o << j << std::endl;
 }

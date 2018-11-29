@@ -8,18 +8,21 @@ uint8_t uEyeCamera::open()
 	nRet = is_InitCamera(&hCam, NULL);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_InitCamera returned: " << nRet;
 		return -1;
 	}
 
 	nRet = is_SetColorMode(hCam, IS_CM_MONO8);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_SetColorMode returned: " << nRet;
 		return -1;
 	}
 
 	nRet = is_SetBinning(hCam, IS_BINNING_2X_VERTICAL | IS_BINNING_2X_HORIZONTAL);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_SetBinning returned: " << nRet;
 		return -1;
 	}
 
@@ -32,18 +35,21 @@ uint8_t uEyeCamera::open()
 	nRet = is_AOI(hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_SetBinning returned: " << nRet;
 		return -1;
 	}
 
 	nRet = is_AllocImageMem(hCam, getWidth(), getHeight(), 8, &pImgMem, &id);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_AllocImageMem returned: " << nRet;
 		return -1;
 	}
 
 	nRet = is_SetImageMem(hCam, pImgMem, id);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_SetImageMem returned: " << nRet;
 		return -1;
 	}
 
@@ -52,13 +58,24 @@ uint8_t uEyeCamera::open()
 	ZeroMemory(nRange, sizeof(nRange));
 
 	nRet = is_PixelClock(hCam, IS_PIXELCLOCK_CMD_GET_RANGE, (void*)nRange, sizeof(nRange));
+	if (nRet != IS_SUCCESS)
+	{
+		LOG(WARNING) << "is_PixelClock returned: " << nRet;
+		return -1;
+	}
 
 	nRet = is_PixelClock(hCam, IS_PIXELCLOCK_CMD_SET,
 		(void*)&nRange[1], sizeof(nRange[1]));
+	if (nRet != IS_SUCCESS)
+	{
+		LOG(WARNING) << "is_PixelClock returned: " << nRet;
+		return -1;
+	}
 
 	nRet = is_SetDisplayMode(hCam, IS_SET_DM_DIB);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_SetDisplayMode returned: " << nRet;
 		return -1;
 	}
 
@@ -75,18 +92,21 @@ uint8_t uEyeCamera::open()
 	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MIN, &minExposure, 8);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_Exposure returned: " << nRet;
 		return -1;
 	}
 
 	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MAX, &maxExposure, 8);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_Exposure returned: " << nRet;
 		return -1;
 	}
 
 	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_INC, &incExposure, 8);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_Exposure returned: " << nRet;
 		return -1;
 	}
 
@@ -135,11 +155,13 @@ uint8_t uEyeCamera::close()
 	nRet = is_FreeImageMem(hCam, pImgMem, id);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_FreeImageMem returned: " << nRet;
 		return -1;
 	}
 	nRet = is_ExitCamera(hCam);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_ExitCamera returned: " << nRet;
 		return -1;
 	}
 	return 0;
@@ -162,9 +184,9 @@ uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNe
 		std::cout << "MISSED: " << *pMissed << std::endl;
 	}
 
-	//nRet = is_CaptureVideo(hCam, IS_WAIT);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_FreezeVideo returned: " << nRet;
 		return -1;
 	}
 
@@ -173,6 +195,7 @@ uint8_t uEyeCamera::capture(uint8_t* pData, int16_t exposureSetting, double* pNe
 	nRet = is_GetImageMem(hCam, &pMem);
 	if (nRet != IS_SUCCESS)
 	{
+		LOG(WARNING) << "is_GetImageMem returned: " << nRet;
 		return -1;
 	}
 

@@ -48,7 +48,7 @@ LinkUpNode* pLinkUpNode;
 LinkUpLabelContainer linkUpLabelContainer = {};
 
 InputModule* pInputModule;
-ProgressingModule* pProgressingModule;
+shared_ptr<ProgressingModule> pProgressingModule;
 OutputModule* pOutputModule;
 
 Settings* pSettings;
@@ -88,9 +88,8 @@ void loadSettings()
 	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(pSettings->imu_parameter.temperature_offset);
 	linkUpLabelContainer.pTemperatureScaleLabel->setValue(pSettings->imu_parameter.temperature_scale);
 
-	linkUpLabelContainer.pImuFilterALabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.a);
-	linkUpLabelContainer.pImuFilterBLabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.b);
-	linkUpLabelContainer.pImuFilterSizeLabel->setValue(pSettings->imu_filter_paramerter.n);
+	linkUpLabelContainer.pImuFilterALabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.nA * sizeof(double));
+	linkUpLabelContainer.pImuFilterBLabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nB * sizeof(double));
 }
 
 void updateSettings()
@@ -102,9 +101,12 @@ void updateSettings()
 	pSettings->imu_parameter.temperature_scale = linkUpLabelContainer.pTemperatureScaleLabel->getValue();
 	pSettings->imu_parameter.temperature_offset = linkUpLabelContainer.pTemperatureOffsetLabel->getValue();
 
-	memcpy(pSettings->imu_filter_paramerter.a, linkUpLabelContainer.pImuFilterALabel->getValue(), 50 * sizeof(double));
-	memcpy(pSettings->imu_filter_paramerter.b, linkUpLabelContainer.pImuFilterBLabel->getValue(), 50 * sizeof(double));
-	pSettings->imu_filter_paramerter.n = linkUpLabelContainer.pImuFilterSizeLabel->getValue();
+	uint16_t nSizeA;
+	uint16_t nSizeB;
+	pSettings->imu_filter_paramerter.pA = (double*)linkUpLabelContainer.pImuFilterALabel->getValue(&nSizeA);
+	pSettings->imu_filter_paramerter.pB = (double*)linkUpLabelContainer.pImuFilterBLabel->getValue(&nSizeB);
+	pSettings->imu_filter_paramerter.nA = nSizeA / sizeof(double);
+	pSettings->imu_filter_paramerter.nB = nSizeB / sizeof(double);
 
 	pSettings->save();
 }
@@ -178,9 +180,8 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pGetChessboardCornerLabel = new LinkUpFunctionLabel("get_chessboard_corner", pLinkUpNode);
 	linkUpLabelContainer.pUpdateSettingsLabel = new LinkUpFunctionLabel("update_settings", pLinkUpNode);
 
-	linkUpLabelContainer.pImuFilterSizeLabel = new LinkUpPropertyLabel_Int32("imu_filter_n", pLinkUpNode);
-	linkUpLabelContainer.pImuFilterALabel = new LinkUpPropertyLabel_Binary("imu_filter_a", sizeof(double) * 50, pLinkUpNode);
-	linkUpLabelContainer.pImuFilterBLabel = new LinkUpPropertyLabel_Binary("imu_filter_b", sizeof(double) * 50, pLinkUpNode);
+	linkUpLabelContainer.pImuFilterALabel = new LinkUpPropertyLabel_Binary("imu_filter_a", 0, pLinkUpNode);
+	linkUpLabelContainer.pImuFilterBLabel = new LinkUpPropertyLabel_Binary("imu_filter_b", 0, pLinkUpNode);
 
 	loadSettings();
 
@@ -194,7 +195,7 @@ int main(int argc, char* argv[])
 
 	pInputModule = new InputModule(io_service, &linkUpLabelContainer);
 	pOutputModule = new OutputModule(pInputModule, &linkUpLabelContainer);
-	pProgressingModule = new ProgressingModule(pInputModule, pOutputModule, &linkUpLabelContainer, pSettings);
+	pProgressingModule = shared_ptr<ProgressingModule>(new ProgressingModule(pInputModule, pOutputModule, &linkUpLabelContainer, pSettings));
 
 	linkUpLabelContainer.pReceiveReplayDataLabel->setFunction(&onReplayData);
 	linkUpLabelContainer.pGetChessboardCornerLabel->setFunction(&onChessboardCorner);

@@ -29,6 +29,7 @@ class ProgressingModule
 #endif //WITH_DSO
 {
 public:
+	~ProgressingModule();
 	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings);
 	void start();
 	void stop();
@@ -66,7 +67,7 @@ private:
 #ifdef WITH_DSO
 	ldso::FullSystem* fullSystem = 0;
 	ldso::Undistort* undistorter = 0;
-	shared_ptr<PangolinDSOViewer> viewer = 0;
+	shared_ptr<OutputWrapper> viewer = 0;
 	int frameID = 0;
 	bool singleThread = false;
 #ifdef __linux

@@ -25,7 +25,6 @@ struct LinkUpLabelContainer
 	LinkUpPropertyLabel_Double* pTemperatureScaleLabel;
 	LinkUpPropertyLabel_Double* pTemperatureOffsetLabel;
 
-	LinkUpPropertyLabel_Int32* pImuFilterSizeLabel;
 	LinkUpPropertyLabel_Binary* pImuFilterALabel;
 	LinkUpPropertyLabel_Binary* pImuFilterBLabel;
 };

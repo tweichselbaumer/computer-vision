@@ -26,9 +26,10 @@ public:
 		double temperature_offset;
 	}imu_parameter;
 	struct {
-		double a[50];
-		double b[50];
-		int n;
+		double* pA;
+		double* pB;
+		int nA;
+		int nB;
 	}imu_filter_paramerter;
 	bool recordRemote;
 private:

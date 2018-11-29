@@ -1,12 +1,12 @@
 #include "IIR.h"
 
-IIR::IIR(double *pA, double *pB, int nSize)
+IIR::IIR(double *pA, double *pB, int nA, int nB)
 {
-	nSize_ = nSize;
-	if (nSize > 1)
+	if (nA >= 1 && nB >= 1 && nA + 1 >= nB)
 	{
-		pConvW_ = new Convolution(pB, nSize);
-		pConvY_ = new Convolution(pA, nSize - 1);
+		isValid_ = true;
+		pConvW_ = new Convolution(pB, nB);
+		pConvY_ = new Convolution(pA, nA);
 		yLast_ = 0;
 	}
 }
@@ -19,10 +19,10 @@ IIR::~IIR()
 
 double IIR::next(double x)
 {
-	if (nSize_ > 1)
+	if (isValid_)
 	{
 		double w = pConvW_->next(x);
-		yLast_ = pConvW_->next(yLast_ + w);
+		yLast_ = pConvY_->next(yLast_) + w;
 		return yLast_;
 	}
 	else

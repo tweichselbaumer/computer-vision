@@ -9,9 +9,9 @@ private:
 	Convolution* pConvW_;
 	Convolution* pConvY_;
 	double yLast_ = 0;
-	int nSize_ = 0;
+	bool isValid_ = false;
 public:
-	IIR(double *pA, double *pB, int nSize);
+	IIR(double *pA, double *pB, int nA, int nB);
 	~IIR();
 	double next(double x);
 };

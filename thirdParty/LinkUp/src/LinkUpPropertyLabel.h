@@ -18,7 +18,7 @@ private:
 	LinkUpPropertyType nType;
 protected:
 	uint16_t nSize;
-	virtual uint8_t * getRaw() = 0;
+	virtual uint8_t * getRaw(uint16_t nSize) = 0;
 	void init(const char* pName, LinkUpPropertyType nType, uint16_t nSize, LinkUpNode* pParent);
 	void progressAdv(LinkUpRaw* pConnector);
 public:
@@ -31,7 +31,7 @@ class LinkUpPropertyLabel_Boolean :public LinkUpPropertyLabel
 private:
 	bool nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	bool getValue();
 	void setValue(bool nNewValue);
@@ -43,7 +43,7 @@ class LinkUpPropertyLabel_Int8 :public LinkUpPropertyLabel
 private:
 	int8_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	int8_t getValue();
 	void setValue(int8_t nNewValue);
@@ -55,7 +55,7 @@ class LinkUpPropertyLabel_UInt8 :public LinkUpPropertyLabel
 private:
 	uint8_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	uint8_t getValue();
 	void setValue(uint8_t nNewValue);
@@ -67,7 +67,7 @@ class LinkUpPropertyLabel_Int16 :public LinkUpPropertyLabel
 private:
 	int16_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	int16_t getValue();
 	void setValue(int16_t nNewValue);
@@ -79,7 +79,7 @@ class LinkUpPropertyLabel_UInt16 :public LinkUpPropertyLabel
 private:
 	uint16_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	uint16_t getValue();
 	void setValue(uint16_t nNewValue);
@@ -91,7 +91,7 @@ class LinkUpPropertyLabel_Int32 :public LinkUpPropertyLabel
 private:
 	int32_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	int32_t getValue();
 	void setValue(int32_t nNewValue);
@@ -103,7 +103,7 @@ class LinkUpPropertyLabel_UInt32 :public LinkUpPropertyLabel
 private:
 	uint32_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	uint32_t getValue();
 	void setValue(uint32_t nNewValue);
@@ -115,7 +115,7 @@ class LinkUpPropertyLabel_Int64 :public LinkUpPropertyLabel
 private:
 	int64_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	int64_t getValue();
 	void setValue(int64_t nNewValue);
@@ -127,7 +127,7 @@ class LinkUpPropertyLabel_UInt64 :public LinkUpPropertyLabel
 private:
 	uint64_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	uint64_t getValue();
 	void setValue(uint64_t nNewValue);
@@ -139,7 +139,7 @@ class LinkUpPropertyLabel_Single :public LinkUpPropertyLabel
 private:
 	float_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	float_t getValue();
 	void setValue(float_t nNewValue);
@@ -151,7 +151,7 @@ class LinkUpPropertyLabel_Double :public LinkUpPropertyLabel
 private:
 	double_t nValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
 	double_t getValue();
 	void setValue(double_t nNewValue);
@@ -163,10 +163,10 @@ class LinkUpPropertyLabel_Binary :public LinkUpPropertyLabel
 private:
 	uint8_t * pValue;
 protected:
-	uint8_t * getRaw();
+	uint8_t * getRaw(uint16_t nSize);
 public:
-	uint8_t * getValue();
-	void setValue(uint8_t* pNewValue);
+	uint8_t * getValue(uint16_t* pSize);
+	void setValue(uint8_t* pNewValue, uint16_t nSize);
 	LinkUpPropertyLabel_Binary(const char* pName, uint16_t nSize, LinkUpNode* pParent);
 	~LinkUpPropertyLabel_Binary();
 };
