@@ -11,6 +11,7 @@
 #include "frontend/Undistort.h"
 #include "frontend/OutputWrapper.h"
 #include "frontend/DSOViewer.h"
+#include "NumTypes.h"
 
 #include "../dsp/IIR.h"
 #include "../io/Settings.h"
@@ -29,6 +30,8 @@ class ProgressingModule
 #endif //WITH_DSO
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
 	~ProgressingModule();
 	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings);
 	void start();

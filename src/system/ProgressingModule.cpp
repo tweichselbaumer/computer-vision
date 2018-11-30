@@ -1,6 +1,6 @@
 #include "ProgressingModule.h"
 
-ProgressingModule::~ProgressingModule() 
+ProgressingModule::~ProgressingModule()
 {
 
 }
@@ -125,7 +125,9 @@ ImuDataDerived ProgressingModule::derivedImu(ImuData data)
 void  ProgressingModule::doWork()
 {
 	int i = 0;
-	bool hasMotion = true;
+	Vec7 movement;
+	movement.setZero();
+
 	while (bIsRunning_)
 	{
 		FramePackage* pFramePackage = pInputModule_->next();
@@ -135,10 +137,22 @@ void  ProgressingModule::doWork()
 		pOutputPackage->imuData = convertImu(pOutputPackage->pFramePackage->imu);
 		pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
 
+		movement[0] += pOutputPackage->imuDataDerived.gx;
+		movement[1] += pOutputPackage->imuDataDerived.gy;
+		movement[2] += pOutputPackage->imuDataDerived.gz;
+		movement[3] += pOutputPackage->imuDataDerived.ax;
+		movement[4] += pOutputPackage->imuDataDerived.ay;
+		movement[5] += pOutputPackage->imuDataDerived.az;
+		movement[6] += 1.0;
+
 #ifdef WITH_DSO
 
 		if (pFramePackage->imu.cam)
 		{
+			Vec6 mov = (movement / movement[6]).block(0, 0, 6, 1);
+
+			bool hasMotion = mov.norm() > 0.5;
+			LOG(INFO) << "NORM: " << mov.norm();
 
 			if (fullSystem->initialized || hasMotion)
 			{
@@ -148,6 +162,8 @@ void  ProgressingModule::doWork()
 
 				delete undistImg;
 			}
+			if (movement[6] > 200 * 0.2)
+				movement.setZero();
 		}
 
 		if (fullSystem->isLost || ldso::setting_fullResetRequested)
