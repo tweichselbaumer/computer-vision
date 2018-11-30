@@ -49,8 +49,10 @@ void LinkUpFunctionLabel::progressAdv(LinkUpRaw* pConnector)
 		{
 			pConnector->send(packet);
 		}
-
-		free(pData);
+		if (pData) 
+		{
+			free(pData);
+		}
 	}
 
 #ifdef LINKUP_DEBUG
