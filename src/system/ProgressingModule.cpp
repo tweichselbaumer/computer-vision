@@ -124,6 +124,7 @@ ImuDataDerived ProgressingModule::derivedImu(ImuData data)
 
 void  ProgressingModule::doWork()
 {
+	int startDelay = 10;
 	int i = 0;
 	Vec7 movement;
 	movement.setZero();
@@ -150,8 +151,9 @@ void  ProgressingModule::doWork()
 		if (pFramePackage->imu.cam)
 		{
 			Vec6 mov = (movement / movement[6]).block(0, 0, 6, 1);
-
-			bool hasMotion = mov.norm() > 0.5;
+			if (startDelay > 0)
+				startDelay--;
+			bool hasMotion = mov.norm() > 2 && startDelay == 0;
 			LOG(INFO) << "NORM: " << mov.norm();
 
 			if (fullSystem->initialized || hasMotion)
