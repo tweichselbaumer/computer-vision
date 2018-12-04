@@ -160,6 +160,7 @@ void InputModule::doWorkCamera()
 		FramePackage* pFramePackage;
 		while (!pFreeQueue_->pop(pFramePackage))
 		{
+			std::cout << "WAIT 1" << std::endl;
 			//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
 		if (pCamera_->capture(pFramePackage->image.data, pLinkUpLabelContainer_->pExposureLabel->getValue(), &(pFramePackage->exposureTime), true, &nMissedFrames) == 0)
@@ -181,6 +182,7 @@ void InputModule::doWorkCamera()
 						FramePackage* pFramePackageMissed;
 						while (!pFreeQueue_->pop(pFramePackageMissed))
 						{
+							std::cout << "WAIT 2" << std::endl;
 							//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 						}
 						pFramePackageMissed->missedTrigger = true;
@@ -206,17 +208,17 @@ void InputModule::doWorkCamera()
 
 				pOutQueue_->push(pFramePackage);
 #endif //EXTERN_CAMERA_TRIGGER
-				}
 			}
+		}
 		else
 		{
 			int debug = 1;
 		}
 
 		//boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-		}
-#endif //WITH_CAMERA
 	}
+#endif //WITH_CAMERA
+}
 
 void InputModule::doWork()
 {

@@ -36,7 +36,7 @@ public:
 	void release(FramePackage* pframePackage);
 	uint8_t * onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut);
 private:
-	enum { queueSize = 200 };
+	enum { queueSize = 2000 };
 	enum { liveTimeout = 4 * 20 };
 
 	void doWork();
