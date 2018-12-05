@@ -4,7 +4,7 @@ OutputModule::OutputModule(InputModule* pInputModule, LinkUpLabelContainer* pLin
 {
 	pFreeQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
-	pInPublishQueue_ = new boost::lockfree::queue<SlamPublishPackage*>(queueSize);
+	pInSlamPublishQueue_ = new boost::lockfree::queue<SlamPublishPackage*>(queueSize);
 
 	pInputModule_ = pInputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
@@ -49,7 +49,7 @@ void OutputModule::writeOut(OutputPackage* pResult)
 
 void OutputModule::writeOut(SlamPublishPackage* pResult)
 {
-	pInPublishQueue_->push(pResult);
+	pInSlamPublishQueue_->push(pResult);
 }
 
 OutputPackage* OutputModule::nextFreeOutputPackage()
@@ -67,7 +67,7 @@ void OutputModule::doWorkPublish()
 	while (bIsRunning_)
 	{
 		SlamPublishPackage* pSlamPublishPackage;
-		while (!pInPublishQueue_->pop(pSlamPublishPackage))
+		while (!pInSlamPublishQueue_->pop(pSlamPublishPackage))
 		{
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
@@ -116,6 +116,11 @@ void OutputModule::doWork()
 		if (pLinkUpLabelContainer_->pImuDerivedEvent->isSubscribed)
 		{
 			pLinkUpLabelContainer_->pImuDerivedEvent->fireEvent((uint8_t*)&(pOutputPackage->imuDataDerived), sizeof(ImuDataDerived));
+		}
+
+		if (pLinkUpLabelContainer_->pSlamStatusEvent->isSubscribed)
+		{
+			pLinkUpLabelContainer_->pSlamStatusEvent->fireEvent((uint8_t*)&(pOutputPackage->slamStatusUpdate), sizeof(SlamStatusUpdate));
 		}
 
 		if (pLinkUpLabelContainer_->pCameraImuEvent->isSubscribed)

@@ -31,7 +31,7 @@ private:
 	boost::lockfree::queue<OutputPackage*>* pInQueue_;
 	boost::lockfree::queue<OutputPackage*>* pFreeQueue_;
 
-	boost::lockfree::queue<SlamPublishPackage*>* pInPublishQueue_;
+	boost::lockfree::queue<SlamPublishPackage*>* pInSlamPublishQueue_;
 
 	void doWork();
 	void doWorkPublish();

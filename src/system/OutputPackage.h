@@ -2,6 +2,7 @@
 #define _OUTPUT_PACKAGE_h
 
 #include "FramePackage.h"
+#include "SlamPublishPackage.h"
 
 struct ImuData
 {
@@ -31,6 +32,7 @@ struct OutputPackage
 	FramePackage* pFramePackage;
 	ImuData imuData;
 	ImuDataDerived imuDataDerived;
+	SlamStatusUpdate slamStatusUpdate;
 };
 
 #endif

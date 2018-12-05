@@ -5,6 +5,14 @@ ProgressingModule::~ProgressingModule()
 
 }
 
+uint8_t* ProgressingModule::onSetSlamStatusData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
+{
+	*pSizeOut = 0;
+	if (nSizeIn == 1)
+		pNewSlamStatusQueue_->push(*((SlamOverallStatus*)pDataIn));
+	return NULL;
+}
+
 ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings)
 {
 	pInputModule_ = pInputModule;
@@ -17,6 +25,8 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 	_pImuFilterAx = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
 	_pImuFilterAy = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
 	_pImuFilterAz = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+
+	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
 }
 
 void  ProgressingModule::start()
@@ -131,6 +141,9 @@ void  ProgressingModule::doWork()
 
 	while (bIsRunning_)
 	{
+		SlamOverallStatus newStatus;
+		bool hasNewStatus = pNewSlamStatusQueue_->pop(newStatus);
+
 		FramePackage* pFramePackage = pInputModule_->next();
 		OutputPackage* pOutputPackage = pOutputModule_->nextFreeOutputPackage();
 		pOutputPackage->pFramePackage = pFramePackage;
@@ -148,13 +161,36 @@ void  ProgressingModule::doWork()
 
 #ifdef WITH_DSO
 
-		if (pFramePackage->imu.cam)
+		if (hasNewStatus && currentStatus_ != newStatus || fullSystem->isLost || ldso::setting_fullResetRequested)
+		{
+			if (hasNewStatus && currentStatus_ != newStatus)
+				currentStatus_ = newStatus;
+			if (currentStatus_ == SlamOverallStatus::SLAM_START || currentStatus_ == SlamOverallStatus::SLAM_RESTART || fullSystem->isLost || ldso::setting_fullResetRequested)
+			{
+				currentStatus_ = SlamOverallStatus::SLAM_START;
+				shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
+				//voc->load(vocFile);
+				delete fullSystem;
+
+				fullSystem = new ldso::FullSystem(voc);
+				fullSystem->linearizeOperation = singleThread;
+
+				fullSystem->setViewer(viewer);
+				viewer->reset();
+				this->reset();
+				if (undistorter->photometricUndist != 0)
+					fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
+			}
+		}
+
+		bool hasMotion = false;
+
+		if (pFramePackage->imu.cam && currentStatus_ == SlamOverallStatus::SLAM_START)
 		{
 			Vec6 mov = (movement / movement[6]).block(0, 0, 6, 1);
 			if (startDelay > 0)
 				startDelay--;
-			bool hasMotion = mov.norm() > 2 && startDelay == 0;
-			LOG(INFO) << "NORM: " << mov.norm();
+			hasMotion = mov.norm() > 2 && startDelay == 0;
 
 			if (fullSystem->initialized || hasMotion)
 			{
@@ -164,27 +200,21 @@ void  ProgressingModule::doWork()
 
 				delete undistImg;
 			}
+
 			if (movement[6] > 200 * 0.2)
 				movement.setZero();
 		}
 
-		if (fullSystem->isLost || ldso::setting_fullResetRequested)
-		{
-			ldso::setting_fullResetRequested = false;
+		if (fullSystem->initialized && currentStatus_ == SlamOverallStatus::SLAM_START)
+			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_RUNNING;
+		else if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
+			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_STOPPED;
+		else if (!fullSystem->initialized && hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
+			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_INITIALIZING;
+		else if (!fullSystem->initialized && !hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
+			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
 
-			shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
-			//voc->load(vocFile);
-			delete fullSystem;
 
-			fullSystem = new ldso::FullSystem(voc);
-			fullSystem->linearizeOperation = singleThread;
-
-			fullSystem->setViewer(viewer);
-			viewer->reset();
-			this->reset();
-			if (undistorter->photometricUndist != 0)
-				fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
-		}
 
 
 #endif //WITH_DSO
@@ -205,7 +235,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 			Eigen::Quaterniond rotation = frame->getPoseOpti().quaternion();
 
 			SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
-			pSlamPublishPackage->publishType = SlamPublishType::KEYFRAME_WITH_POINTS;
+			pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_KEY_FRAME;
 
 			pSlamPublishPackage->frame.id = frame->id;
 			pSlamPublishPackage->frame.tx = translation.x();
@@ -271,7 +301,7 @@ void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<Calib
 	Eigen::Quaterniond rotation = frame->getPose().unit_quaternion();
 
 	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
-	pSlamPublishPackage->publishType = SlamPublishType::FRAME;
+	pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_FRAME;
 
 	pSlamPublishPackage->frame.id = frame->id;
 	pSlamPublishPackage->frame.tx = translation.x();
@@ -301,7 +331,7 @@ void ProgressingModule::join()
 void ProgressingModule::reset()
 {
 	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
-	pSlamPublishPackage->publishType = SlamPublishType::RESET;
+	pSlamPublishPackage->publishType = SlamPublishType::SLAM_RESET;
 
 	pOutputModule_->writeOut(pSlamPublishPackage);
 }

@@ -116,6 +116,11 @@ uint8_t* onReplayData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 	return pInputModule->onReplayData(pDataIn, nSizeIn, pSizeOut);
 }
 
+uint8_t* onSetSlamStatusData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
+{
+	return pProgressingModule->onSetSlamStatusData(pDataIn, nSizeIn, pSizeOut);
+}
+
 uint8_t* onUpdateSettings(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut)
 {
 	*pSizeOut = 0;
@@ -145,14 +150,18 @@ uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeO
 
 int main(int argc, char* argv[])
 {
-	/*try
-	{*/
-	FLAGS_logtostderr = 1;
-	FLAGS_log_dir = ".";
-	FLAGS_minloglevel = 2;
+	FLAGS_logtostderr = 0;
+	FLAGS_minloglevel = 0;
+
+#ifdef __linux
+	FLAGS_log_dir = "/opt/firefly/log";
+#else
+	FLAGS_log_dir = "./log";
+#endif
+
 	google::InitGoogleLogging(argv[0]);
 
-	LOG(INFO) << "starting computer-vision...";
+	std::cout << "starting computer-vision...";
 #ifdef __linux
 	pSettings = new Settings("/opt/firefly/config.json");
 #else
@@ -183,6 +192,9 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pImuFilterALabel = new LinkUpPropertyLabel_Binary("imu_filter_a", 0, pLinkUpNode);
 	linkUpLabelContainer.pImuFilterBLabel = new LinkUpPropertyLabel_Binary("imu_filter_b", 0, pLinkUpNode);
 
+	linkUpLabelContainer.pSlamChangeStatusLabel = new LinkUpFunctionLabel("slam_change_status", pLinkUpNode);
+	linkUpLabelContainer.pSlamStatusEvent = new LinkUpEventLabel("slam_status_event", pLinkUpNode);
+
 	loadSettings();
 
 	boost::shared_ptr<boost::asio::io_service::work> work(
@@ -200,6 +212,7 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pReceiveReplayDataLabel->setFunction(&onReplayData);
 	linkUpLabelContainer.pGetChessboardCornerLabel->setFunction(&onChessboardCorner);
 	linkUpLabelContainer.pUpdateSettingsLabel->setFunction(&onUpdateSettings);
+	linkUpLabelContainer.pSlamChangeStatusLabel->setFunction(&onSetSlamStatusData);
 
 	boost::thread_group worker_threads;
 	worker_threads.create_thread(doWork);
@@ -229,14 +242,6 @@ int main(int argc, char* argv[])
 	pInputModule->stop();
 	pOutputModule->stop();
 	pProgressingModule->stop();
-
-
-	return 0;
-	/*}
-	catch (std::exception& e)
-	{
-		std::cerr << "Exception: " << e.what() << "\n";
-	}*/
 
 	return 0;
 }

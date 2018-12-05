@@ -5,6 +5,8 @@
 #include "OutputModule.h"
 #include "SlamPublishPackage.h"
 
+#include <boost/lockfree/queue.hpp>
+
 #ifdef WITH_DSO
 #include "Settings.h"
 #include "frontend/FullSystem.h"
@@ -37,6 +39,8 @@ public:
 	void start();
 	void stop();
 
+	uint8_t* onSetSlamStatusData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut);
+
 #ifdef WITH_DSO
 	void publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib);
 	void publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib);
@@ -66,6 +70,9 @@ private:
 	IIR* _pImuFilterAx;
 	IIR* _pImuFilterAy;
 	IIR* _pImuFilterAz;
+
+	SlamOverallStatus currentStatus_ = SlamOverallStatus::SLAM_STOP;
+	boost::lockfree::queue<SlamOverallStatus>* pNewSlamStatusQueue_;
 
 #ifdef WITH_DSO
 	ldso::FullSystem* fullSystem = 0;

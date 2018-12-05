@@ -17,14 +17,14 @@ PACK(RawImuData{
 	int16_t az;
 	int16_t temperature;
 	bool cam;
-	};)
+	};);
 
-	struct FramePackage
-	{
-		cv::Mat image;
-		double exposureTime;
-		RawImuData imu;
-		bool missedTrigger;
-	};
+struct FramePackage
+{
+	cv::Mat image;
+	double exposureTime;
+	RawImuData imu;
+	bool missedTrigger;
+};
 
 #endif

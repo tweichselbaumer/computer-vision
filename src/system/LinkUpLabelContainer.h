@@ -27,6 +27,9 @@ struct LinkUpLabelContainer
 
 	LinkUpPropertyLabel_Binary* pImuFilterALabel;
 	LinkUpPropertyLabel_Binary* pImuFilterBLabel;
+
+	LinkUpFunctionLabel* pSlamChangeStatusLabel;
+	LinkUpEventLabel* pSlamStatusEvent;
 };
 
 #endif

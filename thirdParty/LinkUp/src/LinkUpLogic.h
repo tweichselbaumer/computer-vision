@@ -47,105 +47,102 @@ enum LinkUpPropertyType : uint8_t
 	Binary = 12
 };
 
-PACK(
-	LinkUpLogic
-{
-	LinkUpLogicType nLogicType;
-	uint8_t pInnerHeader[];
-});
+PACK(LinkUpLogic{
+		LinkUpLogicType nLogicType;
+		uint8_t pInnerHeader[];
+	});
 
-PACK(
-	LinkUpNameRequest
-{
-	LinkUpLabelType nLabelType;
-	uint16_t nNameLength;
-	char pName[];
-});
+PACK(LinkUpNameRequest
+	{
+		LinkUpLabelType nLabelType;
+		uint16_t nNameLength;
+		char pName[];
+	});
 
 PACK(
 	LinkUpNameResponse
-{
-	LinkUpLabelType nLabelType;
-	uint16_t nIdentifier;
-	uint16_t nNameLength;
-	char pName[];
-});
+	{
+		LinkUpLabelType nLabelType;
+		uint16_t nIdentifier;
+		uint16_t nNameLength;
+		char pName[];
+	});
 
 PACK(
 	LinkUpPropertyGetRequest
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpPropertyGetResponse
-{
-	uint16_t nIdentifier;
-	uint8_t pData[];
-});
+	{
+		uint16_t nIdentifier;
+		uint8_t pData[];
+	});
 
 PACK(
 	LinkUpPropertySetRequest
-{
-	uint16_t nIdentifier;
-	uint8_t pData[];
-});
+	{
+		uint16_t nIdentifier;
+		uint8_t pData[];
+	});
 
 PACK(
 	LinkUpPropertySetResponse
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpEventFireRequest
-{
-	uint16_t nIdentifier;
-	uint8_t pData[];
-});
+	{
+		uint16_t nIdentifier;
+		uint8_t pData[];
+	});
 
 PACK(
 	LinkUpEventFireResponse
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpEventSubscribeRequest
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpEventSubscribeResponse
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpEventUnsubscribeRequest
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpEventUnsubscribeResponse
-{
-	uint16_t nIdentifier;
-});
+	{
+		uint16_t nIdentifier;
+	});
 
 PACK(
 	LinkUpFunctionCallRequest
-{
-	uint16_t nIdentifier;
-	uint8_t pData[];
-});
+	{
+		uint16_t nIdentifier;
+		uint8_t pData[];
+	});
 
 PACK(
 	LinkUpFunctionCallResponse
-{
-	uint16_t nIdentifier;
-	uint8_t pData[];
-});
+	{
+		uint16_t nIdentifier;
+		uint8_t pData[];
+	});
 
 #endif
