@@ -31,6 +31,7 @@ PACK(SlamStatusUpdate{
 
 PACK(SlamPublishFrame{
 	uint32_t id;
+	double timestamp;
 	double tx;
 	double ty;
 	double tz;

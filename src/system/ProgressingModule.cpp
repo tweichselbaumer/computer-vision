@@ -195,7 +195,7 @@ void  ProgressingModule::doWork()
 			if (fullSystem->initialized || hasMotion)
 			{
 				ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
-				ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp, 1.0f);
+				ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp / (1000.0 * 1000 * 1000), 1.0f);
 				fullSystem->addActiveFrame(undistImg, frameID++);
 
 				delete undistImg;
@@ -238,6 +238,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 			pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_KEY_FRAME;
 
 			pSlamPublishPackage->frame.id = frame->id;
+			pSlamPublishPackage->frame.timestamp = frame->timeStamp;
 			pSlamPublishPackage->frame.tx = translation.x();
 			pSlamPublishPackage->frame.ty = translation.y();
 			pSlamPublishPackage->frame.tz = translation.z();
@@ -304,6 +305,7 @@ void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<Calib
 	pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_FRAME;
 
 	pSlamPublishPackage->frame.id = frame->id;
+	pSlamPublishPackage->frame.timestamp = frame->timeStamp;
 	pSlamPublishPackage->frame.tx = translation.x();
 	pSlamPublishPackage->frame.ty = translation.y();
 	pSlamPublishPackage->frame.tz = translation.z();
