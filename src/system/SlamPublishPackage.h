@@ -12,6 +12,7 @@ enum SlamOverallStatus : uint8_t
 
 enum SlamOperationStatus : uint8_t
 {
+	SLAM_UNKNOWN = 0,
 	SLAM_RUNNING = 1,
 	SLAM_STOPPED = 2,
 	SLAM_INITIALIZING = 3,

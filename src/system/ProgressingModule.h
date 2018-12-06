@@ -71,6 +71,8 @@ private:
 	IIR* _pImuFilterAy;
 	IIR* _pImuFilterAz;
 
+	SlamOperationStatus currentOperationStatus_ = SlamOperationStatus::SLAM_UNKNOWN;
+
 	SlamOverallStatus currentStatus_ = SlamOverallStatus::SLAM_STOP;
 	boost::lockfree::queue<SlamOverallStatus>* pNewSlamStatusQueue_;
 

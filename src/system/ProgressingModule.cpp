@@ -205,16 +205,19 @@ void  ProgressingModule::doWork()
 				movement.setZero();
 		}
 
-		if (fullSystem->initialized && currentStatus_ == SlamOverallStatus::SLAM_START)
-			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_RUNNING;
-		else if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
-			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_STOPPED;
-		else if (!fullSystem->initialized && hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
-			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_INITIALIZING;
-		else if (!fullSystem->initialized && !hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
-			pOutputPackage->slamStatusUpdate.operationStatus = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
+		if (pFramePackage->imu.cam)
+		{
+			if (fullSystem->initialized && currentStatus_ == SlamOverallStatus::SLAM_START)
+				currentOperationStatus_ = SlamOperationStatus::SLAM_RUNNING;
+			else if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
+				currentOperationStatus_ = SlamOperationStatus::SLAM_STOPPED;
+			else if (!fullSystem->initialized && hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
+				currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
+			else if (!fullSystem->initialized && !hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
+				currentOperationStatus_ = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
+		}
 
-
+		pOutputPackage->slamStatusUpdate.operationStatus = currentOperationStatus_;
 
 
 #endif //WITH_DSO
