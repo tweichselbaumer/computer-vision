@@ -13,6 +13,7 @@ public:
 	Convolution(double *pH, int nSize);
 	~Convolution();
 	double next(double x);
+	void reset();
 };
 
 #endif

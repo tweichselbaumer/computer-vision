@@ -17,6 +17,13 @@ IIR::~IIR()
 	delete pConvY_;
 }
 
+void IIR::reset()
+{
+	yLast_ = 0;
+	pConvW_->reset();
+	pConvY_->reset();
+}
+
 double IIR::next(double x)
 {
 	if (isValid_)

@@ -16,6 +16,12 @@ Convolution::~Convolution()
 	free(this->pX_);
 }
 
+void Convolution::reset()
+{
+	free(this->pX_);
+	this->pX_ = (double*)calloc(nSize_ * 2, sizeof(double));
+}
+
 double Convolution::next(double x)
 {
 	if (nPtr_ >= nSize_)

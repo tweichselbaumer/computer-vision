@@ -55,6 +55,7 @@ void  ProgressingModule::start()
 	ldso::setting_enableLoopClosing = false;
 
 	ldso::setting_debugout_runquiet = true;
+	//ldso::multiThreading = false;
 
 	undistorter = ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile);
 
@@ -67,7 +68,7 @@ void  ProgressingModule::start()
 	//voc->load(vocFile);
 
 	fullSystem = new ldso::FullSystem(voc);
-	fullSystem->linearizeOperation = singleThread;
+	fullSystem->linearizeOperation = reproducable;
 
 	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));*/
 	viewer = std::shared_ptr<ldso::OutputWrapper>(this);
@@ -144,6 +145,52 @@ void  ProgressingModule::doWork()
 		SlamOverallStatus newStatus;
 		bool hasNewStatus = pNewSlamStatusQueue_->pop(newStatus);
 
+
+
+
+#ifdef WITH_DSO
+
+		if (hasNewStatus && currentStatus_ != newStatus || fullSystem->isLost || ldso::setting_fullResetRequested)
+		{
+			if (hasNewStatus && currentStatus_ != newStatus)
+				currentStatus_ = newStatus;
+			if (currentStatus_ == SlamOverallStatus::SLAM_START || currentStatus_ == SlamOverallStatus::SLAM_RESTART || fullSystem->isLost || ldso::setting_fullResetRequested)
+			{
+				currentStatus_ = SlamOverallStatus::SLAM_START;
+				shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
+				//voc->load(vocFile);
+				delete fullSystem;
+
+				fullSystem = new ldso::FullSystem(voc);
+				fullSystem->linearizeOperation = reproducable;
+
+				fullSystem->setViewer(viewer);
+				viewer->reset();
+				this->reset();
+				if (undistorter->photometricUndist != 0)
+					fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
+
+				if (reproducable)
+				{
+					movement.setZero();
+					startDelay = 10;
+					i = 0;
+
+					_pImuFilterGx->reset();
+					_pImuFilterGy->reset();
+					_pImuFilterGz->reset();
+					_pImuFilterAx->reset();
+					_pImuFilterAy->reset();
+					_pImuFilterAz->reset();
+				}
+			}
+		}
+
+		if (hasNewStatus)
+			continue;
+
+#endif //WITH_DSO
+
 		FramePackage* pFramePackage = pInputModule_->next();
 		OutputPackage* pOutputPackage = pOutputModule_->nextFreeOutputPackage();
 		pOutputPackage->pFramePackage = pFramePackage;
@@ -160,28 +207,6 @@ void  ProgressingModule::doWork()
 		movement[6] += 1.0;
 
 #ifdef WITH_DSO
-
-		if (hasNewStatus && currentStatus_ != newStatus || fullSystem->isLost || ldso::setting_fullResetRequested)
-		{
-			if (hasNewStatus && currentStatus_ != newStatus)
-				currentStatus_ = newStatus;
-			if (currentStatus_ == SlamOverallStatus::SLAM_START || currentStatus_ == SlamOverallStatus::SLAM_RESTART || fullSystem->isLost || ldso::setting_fullResetRequested)
-			{
-				currentStatus_ = SlamOverallStatus::SLAM_START;
-				shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
-				//voc->load(vocFile);
-				delete fullSystem;
-
-				fullSystem = new ldso::FullSystem(voc);
-				fullSystem->linearizeOperation = singleThread;
-
-				fullSystem->setViewer(viewer);
-				viewer->reset();
-				this->reset();
-				if (undistorter->photometricUndist != 0)
-					fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
-			}
-		}
 
 		bool hasMotion = false;
 

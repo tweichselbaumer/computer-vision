@@ -14,6 +14,7 @@ public:
 	IIR(double *pA, double *pB, int nA, int nB);
 	~IIR();
 	double next(double x);
+	void reset();
 };
 
 #endif
