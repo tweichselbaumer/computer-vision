@@ -53,9 +53,8 @@ void  ProgressingModule::start()
 	/*ldso::setting_affineOptModeA = 0;
 	ldso::setting_affineOptModeB = 0;*/
 	ldso::setting_enableLoopClosing = false;
-
 	ldso::setting_debugout_runquiet = true;
-	//ldso::multiThreading = false;
+
 
 	undistorter = ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile);
 
@@ -68,7 +67,8 @@ void  ProgressingModule::start()
 	//voc->load(vocFile);
 
 	fullSystem = new ldso::FullSystem(voc);
-	fullSystem->linearizeOperation = reproducable;
+	fullSystem->linearizeOperation = pSettings_->reproducibleExecution;
+	ldso::multiThreading = pSettings_->reproducibleExecution;
 
 	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));*/
 	viewer = std::shared_ptr<ldso::OutputWrapper>(this);
@@ -77,6 +77,8 @@ void  ProgressingModule::start()
 
 	if (undistorter->photometricUndist != 0)
 		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
+
+	currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
 
 #endif //WITH_DSO
 
@@ -139,30 +141,34 @@ void  ProgressingModule::doWork()
 	int i = 0;
 	Vec7 movement;
 	movement.setZero();
+	SlamStatusUpdate slamStatus;
 
 	while (bIsRunning_)
 	{
 		SlamOverallStatus newStatus;
 		bool hasNewStatus = pNewSlamStatusQueue_->pop(newStatus);
 
-
-
-
 #ifdef WITH_DSO
 
-		if (hasNewStatus && currentStatus_ != newStatus || fullSystem->isLost || ldso::setting_fullResetRequested)
+		if (hasNewStatus || fullSystem->isLost || ldso::setting_fullResetRequested)
 		{
 			if (hasNewStatus && currentStatus_ != newStatus)
 				currentStatus_ = newStatus;
+
+			if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
+				currentOperationStatus_ = SlamOperationStatus::SLAM_STOPPED;
+
 			if (currentStatus_ == SlamOverallStatus::SLAM_START || currentStatus_ == SlamOverallStatus::SLAM_RESTART || fullSystem->isLost || ldso::setting_fullResetRequested)
 			{
 				currentStatus_ = SlamOverallStatus::SLAM_START;
+				currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
 				shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
 				//voc->load(vocFile);
 				delete fullSystem;
 
 				fullSystem = new ldso::FullSystem(voc);
-				fullSystem->linearizeOperation = reproducable;
+				fullSystem->linearizeOperation = pSettings_->reproducibleExecution;
+				ldso::multiThreading = !pSettings_->reproducibleExecution;
 
 				fullSystem->setViewer(viewer);
 				viewer->reset();
@@ -170,7 +176,7 @@ void  ProgressingModule::doWork()
 				if (undistorter->photometricUndist != 0)
 					fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 
-				if (reproducable)
+				if (pSettings_->reproducibleExecution)
 				{
 					movement.setZero();
 					startDelay = 10;
@@ -192,63 +198,66 @@ void  ProgressingModule::doWork()
 #endif //WITH_DSO
 
 		FramePackage* pFramePackage = pInputModule_->next();
-		OutputPackage* pOutputPackage = pOutputModule_->nextFreeOutputPackage();
-		pOutputPackage->pFramePackage = pFramePackage;
+		if (pFramePackage != NULL)
+		{
+			OutputPackage* pOutputPackage = pOutputModule_->nextFreeOutputPackage();
+			pOutputPackage->pFramePackage = pFramePackage;
 
-		pOutputPackage->imuData = convertImu(pOutputPackage->pFramePackage->imu);
-		pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
+			pOutputPackage->imuData = convertImu(pOutputPackage->pFramePackage->imu);
+			pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
 
-		movement[0] += pOutputPackage->imuDataDerived.gx;
-		movement[1] += pOutputPackage->imuDataDerived.gy;
-		movement[2] += pOutputPackage->imuDataDerived.gz;
-		movement[3] += pOutputPackage->imuDataDerived.ax;
-		movement[4] += pOutputPackage->imuDataDerived.ay;
-		movement[5] += pOutputPackage->imuDataDerived.az;
-		movement[6] += 1.0;
+			movement[0] += pOutputPackage->imuDataDerived.gx;
+			movement[1] += pOutputPackage->imuDataDerived.gy;
+			movement[2] += pOutputPackage->imuDataDerived.gz;
+			movement[3] += pOutputPackage->imuDataDerived.ax;
+			movement[4] += pOutputPackage->imuDataDerived.ay;
+			movement[5] += pOutputPackage->imuDataDerived.az;
+			movement[6] += 1.0;
 
 #ifdef WITH_DSO
 
-		bool hasMotion = false;
+			bool hasMotion = false;
 
-		if (pFramePackage->imu.cam && currentStatus_ == SlamOverallStatus::SLAM_START)
-		{
-			Vec6 mov = (movement / movement[6]).block(0, 0, 6, 1);
-			if (startDelay > 0)
-				startDelay--;
-			hasMotion = mov.norm() > 2 && startDelay == 0;
-
-			if (fullSystem->initialized || hasMotion)
+			if (pFramePackage->imu.cam && currentStatus_ == SlamOverallStatus::SLAM_START)
 			{
-				ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
-				ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp / (1000.0 * 1000 * 1000), 1.0f);
-				fullSystem->addActiveFrame(undistImg, frameID++);
+				Vec6 mov = (movement / movement[6]).block(0, 0, 6, 1);
+				if (startDelay > 0)
+					startDelay--;
+				hasMotion = mov.norm() > 2 && startDelay == 0;
 
-				delete undistImg;
+				if (fullSystem->initialized || hasMotion)
+				{
+					ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
+					ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp / (1000.0 * 1000 * 1000), 1.0f);
+					fullSystem->addActiveFrame(undistImg, frameID++);
+
+					delete undistImg;
+				}
+
+				if (movement[6] > 200 * 0.2)
+					movement.setZero();
 			}
 
-			if (movement[6] > 200 * 0.2)
-				movement.setZero();
-		}
-
-		if (pFramePackage->imu.cam)
-		{
-			if (fullSystem->initialized && currentStatus_ == SlamOverallStatus::SLAM_START)
-				currentOperationStatus_ = SlamOperationStatus::SLAM_RUNNING;
-			else if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
-				currentOperationStatus_ = SlamOperationStatus::SLAM_STOPPED;
-			else if (!fullSystem->initialized && hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
-				currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
-			else if (!fullSystem->initialized && !hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
-				currentOperationStatus_ = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
-		}
-
-		pOutputPackage->slamStatusUpdate.operationStatus = currentOperationStatus_;
+			if (pFramePackage->imu.cam)
+			{
+				if (fullSystem->initialized && currentStatus_ == SlamOverallStatus::SLAM_START)
+					currentOperationStatus_ = SlamOperationStatus::SLAM_RUNNING;
+				else if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
+					currentOperationStatus_ = SlamOperationStatus::SLAM_STOPPED;
+				else if (!fullSystem->initialized && hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
+					currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
+				else if (!fullSystem->initialized && !hasMotion && currentStatus_ == SlamOverallStatus::SLAM_START)
+					currentOperationStatus_ = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
+			}
 
 
 #endif //WITH_DSO
 
-		pOutputModule_->writeOut(pOutputPackage);
+			pOutputModule_->writeOut(pOutputPackage);
+		}
 
+		slamStatus.operationStatus = currentOperationStatus_;
+		pOutputModule_->writeOut(slamStatus);
 	}
 }
 

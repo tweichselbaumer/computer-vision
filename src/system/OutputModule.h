@@ -22,6 +22,7 @@ public:
 	void stop();
 	void writeOut(OutputPackage* pResult);
 	void writeOut(SlamPublishPackage* pResult);
+	void writeOut(SlamStatusUpdate pResult);
 	OutputPackage* nextFreeOutputPackage();
 private:
 	enum { queueSize = 200 };
@@ -32,6 +33,8 @@ private:
 	boost::lockfree::queue<OutputPackage*>* pFreeQueue_;
 
 	boost::lockfree::queue<SlamPublishPackage*>* pInSlamPublishQueue_;
+	boost::lockfree::queue<SlamStatusUpdate>* pInSlamStatusQueue_;
+
 
 	void doWork();
 	void doWorkPublish();

@@ -32,7 +32,6 @@ struct OutputPackage
 	FramePackage* pFramePackage;
 	ImuData imuData;
 	ImuDataDerived imuDataDerived;
-	SlamStatusUpdate slamStatusUpdate;
 };
 
 #endif

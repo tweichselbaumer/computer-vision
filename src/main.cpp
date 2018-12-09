@@ -83,6 +83,8 @@ void loadSettings()
 
 	linkUpLabelContainer.pRecodRemoteLabel->setValue(pSettings->recordRemote);
 
+	linkUpLabelContainer.pSlamReproducibleExecutionLabel->setValue(pSettings->reproducibleExecution);
+
 	linkUpLabelContainer.pAccelerometerScaleLabel->setValue(pSettings->imu_parameter.accelerometer_scale);
 	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(pSettings->imu_parameter.gyroscope_scale);
 	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(pSettings->imu_parameter.temperature_offset);
@@ -95,6 +97,7 @@ void loadSettings()
 void updateSettings()
 {
 	pSettings->recordRemote = linkUpLabelContainer.pRecodRemoteLabel->getValue();
+	pSettings->reproducibleExecution = linkUpLabelContainer.pSlamReproducibleExecutionLabel->getValue();
 
 	pSettings->imu_parameter.accelerometer_scale = linkUpLabelContainer.pAccelerometerScaleLabel->getValue();
 	pSettings->imu_parameter.gyroscope_scale = linkUpLabelContainer.pGyroscopeScaleLabel->getValue();
@@ -195,6 +198,8 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pSlamChangeStatusLabel = new LinkUpFunctionLabel("slam_change_status", pLinkUpNode);
 	linkUpLabelContainer.pSlamStatusEvent = new LinkUpEventLabel("slam_status_event", pLinkUpNode);
 
+	linkUpLabelContainer.pSlamReproducibleExecutionLabel = new LinkUpPropertyLabel_Boolean("slam_reproducible_execution", pLinkUpNode);
+
 	loadSettings();
 
 	boost::shared_ptr<boost::asio::io_service::work> work(
@@ -228,7 +233,7 @@ int main(int argc, char* argv[])
 	{
 		while (true)
 			boost::this_thread::sleep_for(boost::chrono::seconds(1));
-	}
+}
 #endif
 	std::cin.get();
 

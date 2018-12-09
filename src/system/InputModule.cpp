@@ -143,10 +143,11 @@ void InputModule::stop()
 
 FramePackage* InputModule::next()
 {
-	FramePackage* pFramePackage;
-	while (!pOutQueue_->pop(pFramePackage))
+	FramePackage* pFramePackage = NULL;
+	if (!pOutQueue_->pop(pFramePackage))
 	{
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		return NULL;
 	}
 	return pFramePackage;
 }

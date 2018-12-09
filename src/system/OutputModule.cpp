@@ -5,6 +5,7 @@ OutputModule::OutputModule(InputModule* pInputModule, LinkUpLabelContainer* pLin
 	pFreeQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInQueue_ = new boost::lockfree::queue<OutputPackage*>(queueSize);
 	pInSlamPublishQueue_ = new boost::lockfree::queue<SlamPublishPackage*>(queueSize);
+	pInSlamStatusQueue_ = new boost::lockfree::queue<SlamStatusUpdate>(queueSize);
 
 	pInputModule_ = pInputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
@@ -52,6 +53,11 @@ void OutputModule::writeOut(SlamPublishPackage* pResult)
 	pInSlamPublishQueue_->push(pResult);
 }
 
+void OutputModule::writeOut(SlamStatusUpdate pResult)
+{
+	pInSlamStatusQueue_->push(pResult);
+}
+
 OutputPackage* OutputModule::nextFreeOutputPackage()
 {
 	OutputPackage* pOutputPackage;
@@ -67,19 +73,34 @@ void OutputModule::doWorkPublish()
 	while (bIsRunning_)
 	{
 		SlamPublishPackage* pSlamPublishPackage;
-		while (!pInSlamPublishQueue_->pop(pSlamPublishPackage))
+		if (!pInSlamPublishQueue_->pop(pSlamPublishPackage))
 		{
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 		}
-
-		if (pLinkUpLabelContainer_->pSlamMapEvent->isSubscribed)
+		else
 		{
-			uint32_t nSize;
-			uint8_t* pTemp = pSlamPublishPackage->getData(&nSize);
-			pLinkUpLabelContainer_->pSlamMapEvent->fireEvent(pTemp, nSize);
-			free(pTemp);
+			if (pLinkUpLabelContainer_->pSlamMapEvent->isSubscribed)
+			{
+				uint32_t nSize;
+				uint8_t* pTemp = pSlamPublishPackage->getData(&nSize);
+				pLinkUpLabelContainer_->pSlamMapEvent->fireEvent(pTemp, nSize);
+				free(pTemp);
+			}
+			delete pSlamPublishPackage;
 		}
-		delete pSlamPublishPackage;
+
+		SlamStatusUpdate slamStatusUpdate;
+		if (!pInSlamStatusQueue_->pop(slamStatusUpdate))
+		{
+			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+		}
+		else
+		{
+			if (pLinkUpLabelContainer_->pSlamStatusEvent->isSubscribed)
+			{
+				pLinkUpLabelContainer_->pSlamStatusEvent->fireEvent((uint8_t*)&(slamStatusUpdate), sizeof(SlamStatusUpdate));
+			}
+		}
 	}
 }
 
@@ -116,11 +137,6 @@ void OutputModule::doWork()
 		if (pLinkUpLabelContainer_->pImuDerivedEvent->isSubscribed)
 		{
 			pLinkUpLabelContainer_->pImuDerivedEvent->fireEvent((uint8_t*)&(pOutputPackage->imuDataDerived), sizeof(ImuDataDerived));
-		}
-
-		if (pLinkUpLabelContainer_->pSlamStatusEvent->isSubscribed)
-		{
-			pLinkUpLabelContainer_->pSlamStatusEvent->fireEvent((uint8_t*)&(pOutputPackage->slamStatusUpdate), sizeof(SlamStatusUpdate));
 		}
 
 		if (pLinkUpLabelContainer_->pCameraImuEvent->isSubscribed)

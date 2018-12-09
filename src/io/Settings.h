@@ -32,6 +32,7 @@ public:
 		int nB;
 	}imu_filter_paramerter;
 	bool recordRemote;
+	bool reproducibleExecution;
 private:
 	string filename_;
 };

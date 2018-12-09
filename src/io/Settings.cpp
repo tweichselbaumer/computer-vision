@@ -33,6 +33,10 @@ void Settings::load()
 		{
 			recordRemote = j["record_remote"].get<bool>();
 		}
+		if (j["reproducible_execution"].is_boolean())
+		{
+			reproducibleExecution = j["reproducible_execution"].get<bool>();
+		}
 
 		if (j["imu_filter_paramerter"]["a"].is_array())
 		{
@@ -78,6 +82,7 @@ void Settings::save()
 	j["imu_parameter"]["temperature_scale"] = imu_parameter.temperature_scale;
 	j["imu_parameter"]["temperature_offset"] = imu_parameter.temperature_offset;
 	j["record_remote"] = recordRemote;
+	j["reproducible_execution"] = reproducibleExecution;
 
 	for (int i = 0; i < imu_filter_paramerter.nA; i++)
 	{
