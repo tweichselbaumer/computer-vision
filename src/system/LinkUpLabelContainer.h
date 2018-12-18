@@ -28,6 +28,15 @@ struct LinkUpLabelContainer
 	LinkUpPropertyLabel_Binary* pImuFilterALabel;
 	LinkUpPropertyLabel_Binary* pImuFilterBLabel;
 
+	LinkUpPropertyLabel_Binary* pImuCamCalibrationTCILabel;
+	LinkUpPropertyLabel_Binary* pImuCalibrationRAGLabel;
+	LinkUpPropertyLabel_Binary* pImuCalibrationMinvALabel;
+	LinkUpPropertyLabel_Binary* pImuCalibrationMinvGLabel;
+	LinkUpPropertyLabel_Double* pAccelerometerNoiseDensityLabel;
+	LinkUpPropertyLabel_Double* pAccelerometerRandomWalkLabel;
+	LinkUpPropertyLabel_Double* pGyroscopeRandomWalkLabel;
+	LinkUpPropertyLabel_Double* pGyroscopeNoiseDensityLabel;
+
 	LinkUpFunctionLabel* pSlamChangeStatusLabel;
 	LinkUpEventLabel* pSlamStatusEvent;
 	LinkUpPropertyLabel_Boolean* pSlamReproducibleExecutionLabel;

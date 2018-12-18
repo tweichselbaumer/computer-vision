@@ -18,6 +18,8 @@
 #include "../dsp/IIR.h"
 #include "../io/Settings.h"
 
+#include <Eigen/Dense>
+
 //#ifdef __linux
 
 //#endif //__linux
@@ -38,7 +40,7 @@ public:
 	ProgressingModule(InputModule* pInputModule, OutputModule* pOutputModule, LinkUpLabelContainer* pLinkUpLabelContainer, Settings* pSettings);
 	void start();
 	void stop();
-
+	void reinitialize();
 	uint8_t* onSetSlamStatusData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut);
 
 #ifdef WITH_DSO
@@ -64,21 +66,25 @@ private:
 	LinkUpLabelContainer* pLinkUpLabelContainer_ = 0;
 	Settings* pSettings_ = 0;
 
-	IIR* _pImuFilterGx;
-	IIR* _pImuFilterGy;
-	IIR* _pImuFilterGz;
-	IIR* _pImuFilterAx;
-	IIR* _pImuFilterAy;
-	IIR* _pImuFilterAz;
+	shared_ptr<IIR> _pImuFilterGx = 0;
+	shared_ptr<IIR> _pImuFilterGy = 0;
+	shared_ptr<IIR> _pImuFilterGz = 0;
+	shared_ptr<IIR> _pImuFilterAx = 0;
+	shared_ptr<IIR> _pImuFilterAy = 0;
+	shared_ptr<IIR> _pImuFilterAz = 0;
 
 	SlamOperationStatus currentOperationStatus_ = SlamOperationStatus::SLAM_UNKNOWN;
 
 	SlamOverallStatus currentStatus_ = SlamOverallStatus::SLAM_STOP;
 	boost::lockfree::queue<SlamOverallStatus>* pNewSlamStatusQueue_;
 
+	Eigen::Matrix3d R_acc_gyro = Eigen::Matrix3d::Identity();
+	Eigen::Matrix3d M_acc_inv = Eigen::Matrix3d::Identity();
+	Eigen::Matrix3d M_gyro_inv = Eigen::Matrix3d::Identity();
+
 #ifdef WITH_DSO
-	ldso::FullSystem* fullSystem = 0;
-	ldso::Undistort* undistorter = 0;
+	shared_ptr<ldso::FullSystem> fullSystem = 0;
+	shared_ptr<ldso::Undistort> undistorter = 0;
 	shared_ptr<OutputWrapper> viewer = 0;
 	int frameID = 0;
 #ifdef __linux
