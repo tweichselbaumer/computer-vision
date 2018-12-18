@@ -26,6 +26,25 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 	_pImuFilterAy = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
 	_pImuFilterAz = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
 
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			R_acc_gyro(i, j) = pSettings->imu_calibration.R_acc_imu[i * 3 + j];
+			M_acc_inv(i, j) = pSettings->imu_calibration.M_inv_gyro[i * 3 + j];
+			M_gyro_inv(i, j) = pSettings->imu_calibration.M_inv_acc[i * 3 + j];
+		}
+	}
+	Eigen::Matrix4d m;
+	m.setZero();
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			m(i, j) = pSettings->imu_calibration.T_cam_imu[i * 4 + j];
+		}
+	}
+
+	T_cam_imu = Sophus::SE3d(m);
+
 	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
 }
 

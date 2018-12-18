@@ -19,6 +19,7 @@
 #include "../io/Settings.h"
 
 #include <Eigen/Dense>
+#include "sophus/se3.hpp"
 
 //#ifdef __linux
 
@@ -81,6 +82,7 @@ private:
 	Eigen::Matrix3d R_acc_gyro = Eigen::Matrix3d::Identity();
 	Eigen::Matrix3d M_acc_inv = Eigen::Matrix3d::Identity();
 	Eigen::Matrix3d M_gyro_inv = Eigen::Matrix3d::Identity();
+	Sophus::SE3d T_cam_imu;
 
 #ifdef WITH_DSO
 	shared_ptr<ldso::FullSystem> fullSystem = 0;
