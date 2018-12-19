@@ -21,6 +21,8 @@
 #include <Eigen/Dense>
 #include "sophus/se3.hpp"
 
+#include "inertial/ImuData.h"
+
 //#ifdef __linux
 
 //#endif //__linux
@@ -88,7 +90,10 @@ private:
 	shared_ptr<ldso::FullSystem> fullSystem = 0;
 	shared_ptr<ldso::Undistort> undistorter = 0;
 	shared_ptr<OutputWrapper> viewer = 0;
-	int frameID = 0;
+
+	deque<ldso::inertial::ImuData> imuQueue;
+
+	ldso::inertial::ImuData convertImu(ImuData imuData);
 #ifdef __linux
 	std::string calib = "/opt/firefly/camera.txt";
 	std::string vignetteFile = "/opt/firefly/vignette.png";

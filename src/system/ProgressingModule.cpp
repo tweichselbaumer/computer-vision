@@ -141,6 +141,23 @@ ImuData ProgressingModule::convertImu(RawImuData raw)
 	return result;
 }
 
+ldso::inertial::ImuData ProgressingModule::convertImu(ImuData imuData)
+{
+	ldso::inertial::ImuData result = {};
+
+	result.time = imuData.timestamp / (1000.0 * 1000 * 1000);
+
+	result.gx = imuData.gx;
+	result.gy = imuData.gy;
+	result.gz = imuData.gz;
+
+	result.ax = imuData.ax;
+	result.ay = imuData.ay;
+	result.az = imuData.az;
+
+	return result;
+}
+
 ImuDataDerived ProgressingModule::derivedImu(ImuData data)
 {
 	ImuDataDerived result = {};
@@ -238,9 +255,16 @@ void  ProgressingModule::doWork()
 
 				if (fullSystem->initialized || hasMotion)
 				{
+					vector<ldso::inertial::ImuData> imuDataHistory;
+					int queueSize = imuQueue.size();
+					for (int i = 0; i < queueSize; i++)
+					{
+						imuDataHistory.push_back(imuQueue.front());
+						imuQueue.pop_front();
+					}
 					ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
 					ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp / (1000.0 * 1000 * 1000), 1.0f);
-					fullSystem->addActiveFrame(undistImg, frameID++);
+					fullSystem->addActiveFrame(undistImg, imuDataHistory);
 
 					delete undistImg;
 				}
@@ -261,6 +285,7 @@ void  ProgressingModule::doWork()
 					currentOperationStatus_ = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
 			}
 
+			imuQueue.push_back(convertImu(pOutputPackage->imuData));
 
 #endif //WITH_DSO
 
