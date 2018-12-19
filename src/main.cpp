@@ -90,8 +90,18 @@ void loadSettings()
 	linkUpLabelContainer.pTemperatureOffsetLabel->setValue(pSettings->imu_parameter.temperature_offset);
 	linkUpLabelContainer.pTemperatureScaleLabel->setValue(pSettings->imu_parameter.temperature_scale);
 
+	linkUpLabelContainer.pAccelerometerNoiseDensityLabel->setValue(pSettings->imu_parameter.accelerometer_noise);
+	linkUpLabelContainer.pAccelerometerRandomWalkLabel->setValue(pSettings->imu_parameter.gyroscope_noise);
+	linkUpLabelContainer.pGyroscopeNoiseDensityLabel->setValue(pSettings->imu_parameter.accelerometer_walk);
+	linkUpLabelContainer.pGyroscopeRandomWalkLabel->setValue(pSettings->imu_parameter.gyroscope_walk);
+
 	linkUpLabelContainer.pImuFilterALabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.nA * sizeof(double));
 	linkUpLabelContainer.pImuFilterBLabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nB * sizeof(double));
+
+	linkUpLabelContainer.pImuCamCalibrationTCILabel->setValue((uint8_t*)pSettings->imu_calibration.T_cam_imu, 4 * 4 * sizeof(double));
+	linkUpLabelContainer.pImuCalibrationRAGLabel->setValue((uint8_t*)pSettings->imu_calibration.R_acc_imu, 3 * 3 * sizeof(double));
+	linkUpLabelContainer.pImuCalibrationMinvGLabel->setValue((uint8_t*)pSettings->imu_calibration.M_inv_gyro, 3 * 3 * sizeof(double));
+	linkUpLabelContainer.pImuCalibrationMinvALabel->setValue((uint8_t*)pSettings->imu_calibration.M_inv_acc, 3 * 3 * sizeof(double));
 }
 
 void updateSettings()
@@ -104,12 +114,53 @@ void updateSettings()
 	pSettings->imu_parameter.temperature_scale = linkUpLabelContainer.pTemperatureScaleLabel->getValue();
 	pSettings->imu_parameter.temperature_offset = linkUpLabelContainer.pTemperatureOffsetLabel->getValue();
 
+	pSettings->imu_parameter.accelerometer_noise = linkUpLabelContainer.pAccelerometerNoiseDensityLabel->getValue();
+	pSettings->imu_parameter.gyroscope_noise = linkUpLabelContainer.pAccelerometerRandomWalkLabel->getValue();
+	pSettings->imu_parameter.accelerometer_walk = linkUpLabelContainer.pGyroscopeNoiseDensityLabel->getValue();
+	pSettings->imu_parameter.gyroscope_walk = linkUpLabelContainer.pGyroscopeRandomWalkLabel->getValue();
+
 	uint16_t nSizeA;
 	uint16_t nSizeB;
 	pSettings->imu_filter_paramerter.pA = (double*)linkUpLabelContainer.pImuFilterALabel->getValue(&nSizeA);
 	pSettings->imu_filter_paramerter.pB = (double*)linkUpLabelContainer.pImuFilterBLabel->getValue(&nSizeB);
 	pSettings->imu_filter_paramerter.nA = nSizeA / sizeof(double);
 	pSettings->imu_filter_paramerter.nB = nSizeB / sizeof(double);
+
+
+	uint16_t nSize;
+	double* temp;
+
+	temp = (double*)linkUpLabelContainer.pImuCamCalibrationTCILabel->getValue(&nSize);
+	if (nSize != sizeof(double) * 4 * 4)
+	{
+		free(temp);
+		temp = (double*)calloc(4 * 4, sizeof(double));
+	}
+	pSettings->imu_calibration.T_cam_imu = temp;
+
+	temp = (double*)linkUpLabelContainer.pImuCalibrationRAGLabel->getValue(&nSize);
+	if (nSize != sizeof(double) * 3 * 3)
+	{
+		free(temp);
+		temp = (double*)calloc(3 * 3, sizeof(double));
+	}
+	pSettings->imu_calibration.R_acc_imu = temp;
+
+	temp = (double*)linkUpLabelContainer.pImuCalibrationMinvALabel->getValue(&nSize);
+	if (nSize != sizeof(double) * 3 * 3)
+	{
+		free(temp);
+		temp = (double*)calloc(3 * 3, sizeof(double));
+	}
+	pSettings->imu_calibration.M_inv_acc = temp;
+
+	temp = (double*)linkUpLabelContainer.pImuCalibrationMinvGLabel->getValue(&nSize);
+	if (nSize != sizeof(double) * 3 * 3)
+	{
+		free(temp);
+		temp = (double*)calloc(3 * 3, sizeof(double));
+}
+	pSettings->imu_calibration.M_inv_gyro = temp;
 
 	pSettings->save();
 }
@@ -195,6 +246,15 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pImuFilterALabel = new LinkUpPropertyLabel_Binary("imu_filter_a", 0, pLinkUpNode);
 	linkUpLabelContainer.pImuFilterBLabel = new LinkUpPropertyLabel_Binary("imu_filter_b", 0, pLinkUpNode);
 
+	linkUpLabelContainer.pImuCamCalibrationTCILabel = new LinkUpPropertyLabel_Binary("calibration_T_cam_imu", 0, pLinkUpNode);
+	linkUpLabelContainer.pImuCalibrationRAGLabel = new LinkUpPropertyLabel_Binary("calibration_R_acc_gyro", 0, pLinkUpNode);
+	linkUpLabelContainer.pImuCalibrationMinvALabel = new LinkUpPropertyLabel_Binary("calibration_M_inv_acc", 0, pLinkUpNode);
+	linkUpLabelContainer.pImuCalibrationMinvGLabel = new LinkUpPropertyLabel_Binary("calibration_M_inv_gyro", 0, pLinkUpNode);
+	linkUpLabelContainer.pAccelerometerNoiseDensityLabel = new LinkUpPropertyLabel_Double("calibration_acc_noise", pLinkUpNode);
+	linkUpLabelContainer.pAccelerometerRandomWalkLabel = new LinkUpPropertyLabel_Double("calibration_acc_walk", pLinkUpNode);
+	linkUpLabelContainer.pGyroscopeRandomWalkLabel = new LinkUpPropertyLabel_Double("calibration_gyro_noise", pLinkUpNode);
+	linkUpLabelContainer.pGyroscopeNoiseDensityLabel = new LinkUpPropertyLabel_Double("calibration_gyro_walk", pLinkUpNode);
+
 	linkUpLabelContainer.pSlamChangeStatusLabel = new LinkUpFunctionLabel("slam_change_status", pLinkUpNode);
 	linkUpLabelContainer.pSlamStatusEvent = new LinkUpEventLabel("slam_status_event", pLinkUpNode);
 
@@ -233,7 +293,7 @@ int main(int argc, char* argv[])
 	{
 		while (true)
 			boost::this_thread::sleep_for(boost::chrono::seconds(1));
-}
+	}
 #endif
 	std::cin.get();
 

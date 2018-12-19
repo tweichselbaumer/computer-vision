@@ -19,19 +19,37 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 	pOutputModule_ = pOutputModule;
 	pLinkUpLabelContainer_ = pLinkUpLabelContainer;
 	pSettings_ = pSettings;
-	_pImuFilterGx = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
-	_pImuFilterGy = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
-	_pImuFilterGz = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
-	_pImuFilterAx = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
-	_pImuFilterAy = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
-	_pImuFilterAz = new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB);
+	_pImuFilterGx = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
+	_pImuFilterGy = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
+	_pImuFilterGz = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
+	_pImuFilterAx = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
+	_pImuFilterAy = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
+	_pImuFilterAz = shared_ptr<IIR>(new IIR(pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.pB, pSettings->imu_filter_paramerter.nA, pSettings->imu_filter_paramerter.nB));
+
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			R_acc_gyro(i, j) = pSettings->imu_calibration.R_acc_imu[i * 3 + j];
+			M_acc_inv(i, j) = pSettings->imu_calibration.M_inv_gyro[i * 3 + j];
+			M_gyro_inv(i, j) = pSettings->imu_calibration.M_inv_acc[i * 3 + j];
+		}
+	}
+	Eigen::Matrix4d m;
+	m.setZero();
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			m(i, j) = pSettings->imu_calibration.T_cam_imu[i * 4 + j];
+		}
+	}
+
+	T_cam_imu = Sophus::SE3d(m);
 
 	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
 }
 
-void  ProgressingModule::start()
+void ProgressingModule::reinitialize()
 {
-
 #ifdef WITH_DSO
 	ldso::setting_desiredImmatureDensity = 1500;
 	ldso::setting_desiredPointDensity = 2000;
@@ -55,8 +73,7 @@ void  ProgressingModule::start()
 	ldso::setting_enableLoopClosing = false;
 	ldso::setting_debugout_runquiet = true;
 
-
-	undistorter = ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile);
+	undistorter = shared_ptr<ldso::Undistort>(ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile));
 
 	ldso::internal::setGlobalCalib(
 		(int)undistorter->getSize()[0],
@@ -66,12 +83,10 @@ void  ProgressingModule::start()
 	shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
 	//voc->load(vocFile);
 
-	fullSystem = new ldso::FullSystem(voc);
+	fullSystem = shared_ptr<ldso::FullSystem>(new ldso::FullSystem(voc));
 	fullSystem->linearizeOperation = pSettings_->reproducibleExecution;
 	ldso::multiThreading = pSettings_->reproducibleExecution;
 
-	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));*/
-	viewer = std::shared_ptr<ldso::OutputWrapper>(this);
 	viewer->reset();
 	fullSystem->setViewer(viewer);
 
@@ -79,9 +94,14 @@ void  ProgressingModule::start()
 		fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 
 	currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
-
 #endif //WITH_DSO
+}
 
+void  ProgressingModule::start()
+{
+	/*viewer = shared_ptr<PangolinDSOViewer>(new PangolinDSOViewer(wG[0], hG[0], true));*/
+	viewer = std::shared_ptr<ldso::OutputWrapper>(this);
+	reinitialize();
 	bIsRunning_ = true;
 	thread_ = boost::thread(boost::bind(&ProgressingModule::doWork, this));
 }
@@ -90,11 +110,6 @@ void  ProgressingModule::stop()
 {
 	bIsRunning_ = false;
 	thread_.join();
-
-#ifdef WITH_DSO
-	/*delete undistorter;
-	delete fullSystem;*/
-#endif //WITH_DSO
 }
 
 ImuData ProgressingModule::convertImu(RawImuData raw)
@@ -105,15 +120,40 @@ ImuData ProgressingModule::convertImu(RawImuData raw)
 
 	result.timestamp = (raw.timestamp_us + multi * pow(2, 32)) * 1000;
 
-	result.gx = raw.gx / pLinkUpLabelContainer_->pGyroscopeScaleLabel->getValue();
-	result.gy = raw.gy / pLinkUpLabelContainer_->pGyroscopeScaleLabel->getValue();
-	result.gz = raw.gz / pLinkUpLabelContainer_->pGyroscopeScaleLabel->getValue();
+	Eigen::Vector3d gyro(raw.gx, raw.gy, raw.gz);
+	gyro /= pLinkUpLabelContainer_->pGyroscopeScaleLabel->getValue();
+	gyro = M_gyro_inv * R_acc_gyro * gyro;
 
-	result.ax = raw.ax / pLinkUpLabelContainer_->pAccelerometerScaleLabel->getValue();
-	result.ay = raw.ay / pLinkUpLabelContainer_->pAccelerometerScaleLabel->getValue();
-	result.az = raw.az / pLinkUpLabelContainer_->pAccelerometerScaleLabel->getValue();
+	Eigen::Vector3d acc(raw.ax, raw.ay, raw.az);
+	acc = M_acc_inv * acc;
+	acc /= pLinkUpLabelContainer_->pAccelerometerScaleLabel->getValue();
+
+	result.gx = gyro.x();
+	result.gy = gyro.y();
+	result.gz = gyro.z();
+
+	result.ax = acc.x();
+	result.ay = acc.y();
+	result.az = acc.z();
 
 	result.temperature = raw.temperature / pLinkUpLabelContainer_->pTemperatureScaleLabel->getValue() + pLinkUpLabelContainer_->pTemperatureOffsetLabel->getValue();
+
+	return result;
+}
+
+ldso::inertial::ImuData ProgressingModule::convertImu(ImuData imuData)
+{
+	ldso::inertial::ImuData result = {};
+
+	result.time = imuData.timestamp / (1000.0 * 1000 * 1000);
+
+	result.gx = imuData.gx;
+	result.gy = imuData.gy;
+	result.gz = imuData.gz;
+
+	result.ax = imuData.ax;
+	result.ay = imuData.ay;
+	result.az = imuData.az;
 
 	return result;
 }
@@ -161,20 +201,8 @@ void  ProgressingModule::doWork()
 			if (currentStatus_ == SlamOverallStatus::SLAM_START || currentStatus_ == SlamOverallStatus::SLAM_RESTART || fullSystem->isLost || ldso::setting_fullResetRequested)
 			{
 				currentStatus_ = SlamOverallStatus::SLAM_START;
-				currentOperationStatus_ = SlamOperationStatus::SLAM_INITIALIZING;
-				shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
-				//voc->load(vocFile);
-				delete fullSystem;
 
-				fullSystem = new ldso::FullSystem(voc);
-				fullSystem->linearizeOperation = pSettings_->reproducibleExecution;
-				ldso::multiThreading = !pSettings_->reproducibleExecution;
-
-				fullSystem->setViewer(viewer);
-				viewer->reset();
-				this->reset();
-				if (undistorter->photometricUndist != 0)
-					fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
+				reinitialize();
 
 				if (pSettings_->reproducibleExecution)
 				{
@@ -227,9 +255,16 @@ void  ProgressingModule::doWork()
 
 				if (fullSystem->initialized || hasMotion)
 				{
+					vector<ldso::inertial::ImuData> imuDataHistory;
+					int queueSize = imuQueue.size();
+					for (int i = 0; i < queueSize; i++)
+					{
+						imuDataHistory.push_back(imuQueue.front());
+						imuQueue.pop_front();
+					}
 					ldso::MinimalImageB minImg((int)pFramePackage->image.cols, (int)pFramePackage->image.rows, (unsigned char*)pFramePackage->image.data);
 					ldso::ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, pFramePackage->exposureTime, pOutputPackage->imuData.timestamp / (1000.0 * 1000 * 1000), 1.0f);
-					fullSystem->addActiveFrame(undistImg, frameID++);
+					fullSystem->addActiveFrame(undistImg, imuDataHistory);
 
 					delete undistImg;
 				}
@@ -250,6 +285,7 @@ void  ProgressingModule::doWork()
 					currentOperationStatus_ = SlamOperationStatus::SLAM_WAITING_FOR_MOTION;
 			}
 
+			imuQueue.push_back(convertImu(pOutputPackage->imuData));
 
 #endif //WITH_DSO
 

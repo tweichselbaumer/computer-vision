@@ -24,7 +24,17 @@ public:
 		double gyroscope_scale;
 		double temperature_scale;
 		double temperature_offset;
+		double accelerometer_noise;
+		double accelerometer_walk;
+		double gyroscope_noise;
+		double gyroscope_walk;
 	}imu_parameter;
+	struct {
+		double* T_cam_imu;
+		double* R_acc_imu;
+		double* M_inv_gyro;
+		double* M_inv_acc;
+	}imu_calibration;
 	struct {
 		double* pA;
 		double* pB;
