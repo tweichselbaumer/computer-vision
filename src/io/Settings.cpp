@@ -98,6 +98,15 @@ void Settings::load()
 				imu_calibration.T_cam_imu[i++] = (double)*it;
 			}
 		}
+		else
+		{
+			for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 4; j++)
+					if (j == i)
+						imu_calibration.T_cam_imu[i * 4 + j] = 1.0;
+
+		}
+
 
 		imu_calibration.R_acc_imu = (double*)calloc(3 * 3, sizeof(double));
 		if (j["imu_calibration"]["R_acc_imu"].is_array())
@@ -107,6 +116,13 @@ void Settings::load()
 			{
 				imu_calibration.R_acc_imu[i++] = (double)*it;
 			}
+		}
+		else
+		{
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
+					if (j == i)
+						imu_calibration.R_acc_imu[i * 3 + j] = 1.0;
 		}
 
 		imu_calibration.M_inv_acc = (double*)calloc(3 * 3, sizeof(double));
@@ -118,6 +134,13 @@ void Settings::load()
 				imu_calibration.M_inv_acc[i++] = (double)*it;
 			}
 		}
+		else
+		{
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
+					if (j == i)
+						imu_calibration.M_inv_acc[i * 3 + j] = 1.0;
+		}
 
 		imu_calibration.M_inv_gyro = (double*)calloc(3 * 3, sizeof(double));
 		if (j["imu_calibration"]["M_inv_gyro"].is_array())
@@ -127,6 +150,13 @@ void Settings::load()
 			{
 				imu_calibration.M_inv_gyro[i++] = (double)*it;
 			}
+		}
+		else
+		{
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
+					if (j == i)
+						imu_calibration.M_inv_gyro[i * 3 + j] = 1.0;
 		}
 	}
 }
