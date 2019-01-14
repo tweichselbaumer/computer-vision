@@ -85,6 +85,9 @@ void ProgressingModule::reinitialize()
 
 	fullSystem = shared_ptr<ldso::FullSystem>(new ldso::FullSystem(voc));
 	fullSystem->linearizeOperation = pSettings_->reproducibleExecution;
+
+	fullSystem->setImuToCamTransformation(T_cam_imu);
+
 	ldso::multiThreading = pSettings_->reproducibleExecution;
 
 	viewer->reset();
@@ -298,14 +301,25 @@ void  ProgressingModule::doWork()
 }
 
 #ifdef WITH_DSO
-void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib)
+void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
+	SE3 T_wd_w_temp;
+	{
+		unique_lock<mutex> lck(inertialMutex);
+		T_wd_w = SE3(HInertial->get_worldToWorldDSO_PRE(), Vec3(0, 0, 0));
+		T_wd_w_temp = T_wd_w;
+	}
+
 	for (shared_ptr<Frame> frame : frames)
 	{
 		if (frame->frameHessian && frame->frameHessian->flaggedForMarginalization)
 		{
-			Eigen::Vector3d translation = frame->getPoseOpti().translation();
-			Eigen::Quaterniond rotation = frame->getPoseOpti().quaternion();
+			Sim3 T_c_wd_ = frame->getPoseOpti();
+			SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
+			SE3 T_c_w = T_wd_w_temp * T_c_wd;
+
+			Eigen::Vector3d translation = T_c_w.translation();
+			Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
 
 			SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
 			pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_KEY_FRAME;
@@ -369,10 +383,18 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 	}
 }
 
-void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib)
+void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
-	Eigen::Vector3d translation = frame->getPose().translation();
-	Eigen::Quaterniond rotation = frame->getPose().unit_quaternion();
+	SE3 T_c_wd = frame->getPose();
+	SE3 T_c_w;
+
+	{
+		unique_lock<mutex> lck(inertialMutex);
+		T_c_w = T_c_wd * T_wd_w;
+	}
+
+	Eigen::Vector3d translation = T_c_w.translation();
+	Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
 
 	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
 	pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_FRAME;
