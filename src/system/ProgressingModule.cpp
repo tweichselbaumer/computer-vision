@@ -46,6 +46,9 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 	T_cam_imu = Sophus::SE3d(m);
 
 	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
+
+	std::cout << ldso::inertial::InertialUtility::Jr(Vec3(1, 2, 3)) << std::endl << std::endl;
+	std::cout << ldso::inertial::InertialUtility::JrInv(Vec3(1, 2, 3)) << std::endl << std::endl;
 }
 
 void ProgressingModule::reinitialize()
@@ -180,8 +183,7 @@ ImuDataDerived ProgressingModule::derivedImu(ImuData data)
 
 void  ProgressingModule::doWork()
 {
-	int startDelay = 10;
-	int i = 0;
+	bool isFirst = true;
 	Vec7 movement;
 	movement.setZero();
 	SlamStatusUpdate slamStatus;
@@ -210,8 +212,7 @@ void  ProgressingModule::doWork()
 				if (pSettings_->reproducibleExecution)
 				{
 					movement.setZero();
-					startDelay = 10;
-					i = 0;
+					isFirst = true;
 
 					_pImuFilterGx->reset();
 					_pImuFilterGy->reset();
@@ -235,7 +236,28 @@ void  ProgressingModule::doWork()
 			pOutputPackage->pFramePackage = pFramePackage;
 
 			pOutputPackage->imuData = convertImu(pOutputPackage->pFramePackage->imu);
-			pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
+
+			if (isFirst)
+			{
+				Vec6 move;
+				int i = 0;
+
+				do
+				{
+					i++;
+					pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
+					move[0] = pOutputPackage->imuDataDerived.gx;
+					move[1] = pOutputPackage->imuDataDerived.gy;
+					move[2] = pOutputPackage->imuDataDerived.gz;
+					move[3] = pOutputPackage->imuDataDerived.ax;
+					move[4] = pOutputPackage->imuDataDerived.ay;
+					move[5] = pOutputPackage->imuDataDerived.az;
+				} while (i < setting_vi_nMaxIterationsIIRInitialization && move.norm() > setting_vi_epsilonIIRInitialization);
+			}
+			else
+			{
+				pOutputPackage->imuDataDerived = derivedImu(pOutputPackage->imuData);
+			}
 
 			movement[0] += pOutputPackage->imuDataDerived.gx;
 			movement[1] += pOutputPackage->imuDataDerived.gy;
@@ -252,9 +274,8 @@ void  ProgressingModule::doWork()
 			if (pFramePackage->imu.cam && currentStatus_ == SlamOverallStatus::SLAM_START)
 			{
 				Vec6 mov = (movement / movement[6]).block(0, 0, 6, 1);
-				if (startDelay > 0)
-					startDelay--;
-				hasMotion = mov.norm() > 2 && startDelay == 0;
+
+				hasMotion = mov.norm() > setting_vi_hasMovementThreshold;
 
 				if (fullSystem->initialized || hasMotion)
 				{
@@ -272,7 +293,7 @@ void  ProgressingModule::doWork()
 					delete undistImg;
 				}
 
-				if (movement[6] > 200 * 0.2)
+				if (movement[6] > setting_vi_hasMovementResetPeriod)
 					movement.setZero();
 			}
 
@@ -316,7 +337,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 		{
 			Sim3 T_c_wd_ = frame->getPoseOpti();
 			SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
-			SE3 T_c_w = T_wd_w_temp * T_c_wd;
+			SE3 T_c_w = T_c_wd * T_wd_w_temp;
 
 			Eigen::Vector3d translation = T_c_w.translation();
 			Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
