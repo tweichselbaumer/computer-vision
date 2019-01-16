@@ -12,7 +12,7 @@
 #include "frontend/FullSystem.h"
 #include "frontend/Undistort.h"
 #include "frontend/OutputWrapper.h"
-#include "frontend/DSOViewer.h"
+//#include "frontend/DSOViewer.h"
 #include "NumTypes.h"
 
 #include "../dsp/IIR.h"
@@ -20,7 +20,7 @@
 
 #include <Eigen/Dense>
 #include "sophus/se3.hpp"
-
+#include <mutex>
 #include "inertial/ImuData.h"
 
 //#ifdef __linux
@@ -47,8 +47,8 @@ public:
 	uint8_t* onSetSlamStatusData(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeOut);
 
 #ifdef WITH_DSO
-	void publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib);
-	void publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib);
+	void publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial);
+	void publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial);
 	void setMap(shared_ptr<Map> m);
 	void join();
 	void reset();
@@ -94,6 +94,11 @@ private:
 	deque<ldso::inertial::ImuData> imuQueue;
 
 	ldso::inertial::ImuData convertImu(ImuData imuData);
+
+	Sophus::SE3d T_wd_w;
+
+	mutex inertialMutex;
+
 #ifdef __linux
 	std::string calib = "/opt/firefly/camera.txt";
 	std::string vignetteFile = "/opt/firefly/vignette.png";
