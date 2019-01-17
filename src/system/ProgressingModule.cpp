@@ -46,9 +46,6 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 	T_cam_imu = Sophus::SE3d(m);
 
 	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
-
-	std::cout << ldso::inertial::InertialUtility::Jr(Vec3(1, 2, 3)) << std::endl << std::endl;
-	std::cout << ldso::inertial::InertialUtility::JrInv(Vec3(1, 2, 3)) << std::endl << std::endl;
 }
 
 void ProgressingModule::reinitialize()
