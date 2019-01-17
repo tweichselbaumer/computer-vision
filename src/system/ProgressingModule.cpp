@@ -150,9 +150,9 @@ ldso::inertial::ImuData ProgressingModule::convertImu(ImuData imuData)
 
 	result.time = imuData.timestamp / (1000.0 * 1000 * 1000);
 
-	result.gx = imuData.gx;
-	result.gy = imuData.gy;
-	result.gz = imuData.gz;
+	result.gx = imuData.gx / 180.0 * M_PI;
+	result.gy = imuData.gy / 180.0 * M_PI;
+	result.gz = imuData.gz / 180.0 * M_PI;
 
 	result.ax = imuData.ax;
 	result.ay = imuData.ay;
