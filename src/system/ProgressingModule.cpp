@@ -324,7 +324,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 	SE3 T_wd_w_temp;
 	{
 		unique_lock<mutex> lck(inertialMutex);
-		T_wd_w = SE3(HInertial->get_worldToWorldDSO_PRE(), Vec3(0, 0, 0));
+		T_wd_w = SE3(HInertial->R_DW_PRE, Vec3(0, 0, 0));
 		T_wd_w_temp = T_wd_w;
 	}
 
