@@ -390,7 +390,7 @@ void ProgressingModule::runViTests()
 
 	shared_ptr<inertial::InertialHessian> inertialHessian = shared_ptr<inertial::InertialHessian>(new inertial::InertialHessian());
 
-	scale = 1000;
+	scale = 1000.0;
 
 	Vec6 t_bc;
 	Vec6 t_cd;
@@ -411,7 +411,7 @@ void ProgressingModule::runViTests()
 	inertialHessian->R_WD_evalPT = inertialHessian->R_DW_evalPT.inverse();
 	inertialHessian->scale_evalPT = (rand() % 100) / scale;
 
-	scale = 1000;
+	scale = 1000.0;
 	exactFH_from->W_v_B_EvalPT = Vec3((rand() % 100) / scale, (rand() % 100) / scale, (rand() % 100) / scale);
 	exactFH_to->W_v_B_EvalPT = Vec3((rand() % 100) / scale, (rand() % 100) / scale, (rand() % 100) / scale);
 
@@ -465,11 +465,11 @@ void ProgressingModule::runViTests()
 
 	for (int i = 0; i < 15; i++)
 	{
-		scale = 1000;
+		scale = 10.0;
 		x_from[i] = (rand() % 100) / scale;
 		x_to[i] = (rand() % 100) / scale;
 		x[i] = (rand() % 100) / scale;
-		scale = 1000000;
+		scale = 100000.0;
 		dx_from[i] = (rand() % 100) / scale;
 		dx_to[i] = (rand() % 100) / scale;
 		dx[i] = (rand() % 100) / scale;
@@ -583,20 +583,54 @@ void ProgressingModule::runViTests()
 
 	std::cout << "Error dr/dp: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
 
-	//========= dr/dp:
+	//========= dr/ds:
 	select = s[13];
 	exactFH_from->setState(x_from);
 	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
 	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);
 
-	std::cout << (x + select * dx).block<4, 1>(10, 0) << std::endl << std::endl;
-	std::cout << (x).block<4, 1>(10, 0) << std::endl << std::endl;
-
 	delta.setZero();
 	delta.block<1, 1>(9, 0) = dx.block<1,1>(13,0);
 
-	std::cout << "Error dr/ds: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r - approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
+	std::cout << "Error dr/ds: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
+
+	//========= dr/da:
+	select = s[10] + s[11] + s[12];
+	exactFH_from->setState(x_from);
+	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<3, 1>(6, 0) = dx.block<3, 1>(10, 0);
+
+	std::cout << "Error dr/da: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
+
+	//========= dr/du:
+	select = s[0] + s[1] + s[2];
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->fh->setState((x).block<10, 1>(0, 0));
+	inertialHessian->setState((x).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<15, 1>(10, 0) = select * dx_from;
+
+	std::cout << "Error dr/du: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
+
+
+	//========= dr/dw:
+	select = s[3] + s[4] + s[5];
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->fh->setState((x).block<10, 1>(0, 0));
+	inertialHessian->setState((x).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<15, 1>(10, 0) = select * dx_from;
+
+	std::cout << "Error dr/dw: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
 }
 
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
