@@ -99,6 +99,8 @@ private:
 
 	mutex inertialMutex;
 
+	void runViTests();
+
 #ifdef __linux
 	std::string calib = "/opt/firefly/camera.txt";
 	std::string vignetteFile = "/opt/firefly/vignette.png";
