@@ -322,9 +322,30 @@ void  ProgressingModule::doWork()
 
 #ifdef WITH_DSO
 
+Vec15 ProgressingModule::doViTestVec15Update(Vec15 x, Vec15 dx)
+{
+	Vec15 res = x;
+
+	res.block<6, 1>(0, 0) = (SE3::exp(dx.block<6, 1>(0, 0))*SE3::exp(x.block<6, 1>(0, 0))).log();
+	res.block<9, 1>(6, 0) += dx.block<9, 1>(6, 0);
+
+	return res;
+}
+
+Vec15 ProgressingModule::doViTestVec15_2Update(Vec15 x, Vec15 dx)
+{
+	Vec15 res = x;
+
+	res.block<6, 1>(0, 0) = (SE3::exp(dx.block<6, 1>(0, 0))*SE3::exp(x.block<6, 1>(0, 0))).log();
+	res.block<3, 1>(10, 0) = (SO3::exp(dx.block<3, 1>(10, 0))*SO3::exp(x.block<3, 1>(10, 0))).log();
+	res.block<1, 1>(13, 0) += dx.block<1, 1>(13, 0);
+
+	return res;
+}
+
 void ProgressingModule::runViTests()
 {
-	srand(1217893891703);
+	//srand(1217893891703);
 	vector<inertial::ImuData> data;
 
 	shared_ptr<inertial::PreIntegration> exactPreIntegration = shared_ptr<inertial::PreIntegration>(new inertial::PreIntegration());
@@ -469,7 +490,7 @@ void ProgressingModule::runViTests()
 		x_from[i] = (rand() % 10) / scale;
 		x_to[i] = (rand() % 10) / scale;
 		x[i] = (rand() % 10) / scale;
-		scale = 1000000.0;
+		scale = 100000.0;
 		dx_from[i] = (rand() % 10) / scale;
 		dx_to[i] = (rand() % 10) / scale;
 		dx[i] = (rand() % 10) / scale;
@@ -485,20 +506,23 @@ void ProgressingModule::runViTests()
 	approxFH_from->fh->setState(x.block<10, 1>(0, 0));
 	inertialHessian->setState((x).block<4, 1>(10, 0));
 	approxFH_from->linearize(inertialHessian);
-	
+
 
 	//========= dr/du:
 	select = s[0] + s[1] + s[2];
 
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_to->setState(x_to);
 	exactFFH->linearize();
 
 	std::cout << "Error dr/du_i: " << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm();
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+	//std::cout << exactFFH->r - approxFFH->r << std::endl;
+	//std::cout << approxFFH->J_from * select * dx_from << std::endl;
+
 
 	exactFH_from->setState(x_from);
-	exactFH_to->setState(x_to + select * dx_to);
+	exactFH_to->setState(doViTestVec15Update(x_to, select * dx_to));
 	exactFFH->linearize();
 	std::cout << "Error dr/du_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
@@ -506,7 +530,7 @@ void ProgressingModule::runViTests()
 	//========= dr/dw:
 	select = s[3] + s[4] + s[5];
 
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_to->setState(x_to);
 	exactFFH->linearize();
 
@@ -514,7 +538,7 @@ void ProgressingModule::runViTests()
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
 
 	exactFH_from->setState(x_from);
-	exactFH_to->setState(x_to + select * dx_to);
+	exactFH_to->setState(doViTestVec15Update(x_to, select * dx_to));
 	exactFFH->linearize();
 	std::cout << "Error dr/dw_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
@@ -522,7 +546,7 @@ void ProgressingModule::runViTests()
 	//========= dr/dv:
 	select = s[6] + s[7] + s[8];
 
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_to->setState(x_to);
 	exactFFH->linearize();
 
@@ -530,7 +554,7 @@ void ProgressingModule::runViTests()
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
 
 	exactFH_from->setState(x_from);
-	exactFH_to->setState(x_to + select * dx_to);
+	exactFH_to->setState(doViTestVec15Update(x_to, select * dx_to));
 	exactFFH->linearize();
 	std::cout << "Error dr/dv_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
@@ -538,7 +562,7 @@ void ProgressingModule::runViTests()
 	//========= dr/dbg:
 	select = s[9] + s[10] + s[11];
 
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_to->setState(x_to);
 	exactFFH->linearize();
 
@@ -546,15 +570,15 @@ void ProgressingModule::runViTests()
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
 
 	exactFH_from->setState(x_from);
-	exactFH_to->setState(x_to + select * dx_to);
+	exactFH_to->setState(doViTestVec15Update(x_to, select * dx_to));
 	exactFFH->linearize();
 	std::cout << "Error dr/dbg_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
 
-	//========= dr/dbg:
+	//========= dr/dba:
 	select = s[12] + s[13] + s[14];
 
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_to->setState(x_to);
 	exactFFH->linearize();
 
@@ -562,7 +586,7 @@ void ProgressingModule::runViTests()
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
 
 	exactFH_from->setState(x_from);
-	exactFH_to->setState(x_to + select * dx_to);
+	exactFH_to->setState(doViTestVec15Update(x_to, select * dx_to));
 	exactFFH->linearize();
 	std::cout << "Error dr/dba_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
 	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
@@ -572,8 +596,8 @@ void ProgressingModule::runViTests()
 
 	select = s[0] + s[1] + s[2];
 	exactFH_from->setState(x_from);
-	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	inertialHessian->setState((x  + select * dx).block<4, 1>(10, 0));
+	exactFH_from->fh->setState(doViTestVec15_2Update(x, select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState(doViTestVec15_2Update(x, select * dx).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);
 
 	delta.setZero();
@@ -585,8 +609,8 @@ void ProgressingModule::runViTests()
 	//========= dr/dp:
 	select = s[3] + s[4] + s[5];
 	exactFH_from->setState(x_from);
-	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->fh->setState(doViTestVec15_2Update(x, select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState(doViTestVec15_2Update(x, select * dx).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);
 
 	delta.setZero();
@@ -598,12 +622,12 @@ void ProgressingModule::runViTests()
 	//========= dr/ds:
 	select = s[13];
 	exactFH_from->setState(x_from);
-	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->fh->setState(doViTestVec15_2Update(x, select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState(doViTestVec15_2Update(x, select * dx).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);
 
 	delta.setZero();
-	delta.block<1, 1>(9, 0) = dx.block<1,1>(13,0);
+	delta.block<1, 1>(9, 0) = dx.block<1, 1>(13, 0);
 
 	std::cout << "Error dr/ds: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
 	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
@@ -611,8 +635,8 @@ void ProgressingModule::runViTests()
 	//========= dr/da:
 	select = s[10] + s[11] + s[12];
 	exactFH_from->setState(x_from);
-	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->fh->setState(doViTestVec15_2Update(x, select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState(doViTestVec15_2Update(x, select * dx).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);
 
 	delta.setZero();
@@ -623,7 +647,7 @@ void ProgressingModule::runViTests()
 
 	//========= dr/du:
 	select = s[0] + s[1] + s[2];
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_from->fh->setState((x).block<10, 1>(0, 0));
 	inertialHessian->setState((x).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);
@@ -637,7 +661,7 @@ void ProgressingModule::runViTests()
 
 	//========= dr/dw:
 	select = s[3] + s[4] + s[5];
-	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->setState(doViTestVec15Update(x_from, select * dx_from));
 	exactFH_from->fh->setState((x).block<10, 1>(0, 0));
 	inertialHessian->setState((x).block<4, 1>(10, 0));
 	exactFH_from->linearize(inertialHessian);

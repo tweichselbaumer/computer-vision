@@ -100,6 +100,8 @@ private:
 	mutex inertialMutex;
 
 	void runViTests();
+	Vec15 doViTestVec15_2Update(Vec15 x, Vec15 dx);
+	Vec15 doViTestVec15Update(Vec15 x, Vec15 dx);
 
 #ifdef __linux
 	std::string calib = "/opt/firefly/camera.txt";
