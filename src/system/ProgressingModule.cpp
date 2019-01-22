@@ -47,7 +47,7 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 
 	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
 
-	//runViTests();
+	runViTests();
 }
 
 void ProgressingModule::reinitialize()
@@ -324,313 +324,329 @@ void  ProgressingModule::doWork()
 
 void ProgressingModule::runViTests()
 {
-	//srand(1217893891703);
-	//vector<inertial::ImuData> data;
+	srand(1217893891703);
+	vector<inertial::ImuData> data;
 
-	//shared_ptr<inertial::PreIntegration> exactPreIntegration = shared_ptr<inertial::PreIntegration>(new inertial::PreIntegration());
-	//shared_ptr<inertial::PreIntegration> approxPreIntegration = shared_ptr<inertial::PreIntegration>(new inertial::PreIntegration());
+	shared_ptr<inertial::PreIntegration> exactPreIntegration = shared_ptr<inertial::PreIntegration>(new inertial::PreIntegration());
+	shared_ptr<inertial::PreIntegration> approxPreIntegration = shared_ptr<inertial::PreIntegration>(new inertial::PreIntegration());
 
-	//double scale = 10.0;
+	double scale = 10.0;
 
-	//for (int i = 0; i < 20; i++)
-	//{
-	//	inertial::ImuData d;
-	//	d.ax = (rand() % 10) / scale;
-	//	d.ay = (rand() % 10) / scale;
-	//	d.az = (rand() % 10) / scale;
-	//	d.gx = (rand() % 10) / scale;
-	//	d.gy = (rand() % 10) / scale;
-	//	d.gz = (rand() % 10) / scale;
+	for (int i = 0; i < 20; i++)
+	{
+		inertial::ImuData d;
+		d.ax = (rand() % 10) / scale;
+		d.ay = (rand() % 10) / scale;
+		d.az = (rand() % 10) / scale;
+		d.gx = (rand() % 10) / scale;
+		d.gy = (rand() % 10) / scale;
+		d.gz = (rand() % 10) / scale;
 
-	//	data.push_back(d);
-	//}
+		data.push_back(d);
+	}
 
-	//scale = 1000;
-	//Vec3 db_g((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
-	//Vec3 db_a((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	scale = 1000;
+	Vec3 db_g((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	Vec3 db_a((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
 
-	//scale = 100.0;
-	//Vec3 b_g((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
-	//Vec3 b_a((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	scale = 100.0;
+	Vec3 b_g((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	Vec3 b_a((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
 
-	//exactPreIntegration->lin_bias_g = b_g + db_g;
-	//exactPreIntegration->lin_bias_a = b_a + db_a;
+	exactPreIntegration->lin_bias_g = b_g + db_g;
+	exactPreIntegration->lin_bias_a = b_a + db_a;
 
-	//approxPreIntegration->lin_bias_g = b_g;
-	//approxPreIntegration->lin_bias_a = b_a;
+	approxPreIntegration->lin_bias_g = b_g;
+	approxPreIntegration->lin_bias_a = b_a;
 
-	//approxPreIntegration->addImuData(data);
-	//exactPreIntegration->addImuData(data);
+	approxPreIntegration->addImuData(data);
+	exactPreIntegration->addImuData(data);
 
-	//std::cout << "Error R: " << std::setprecision(15) << (exactPreIntegration->delta_R_ij * ((approxPreIntegration->delta_R_ij * SO3::exp(approxPreIntegration->d_delta_R_ij_dg * db_g)).inverse())).log().norm() << std::endl;
-	//std::cout << "Error v: " << std::setprecision(15) << (exactPreIntegration->delta_v_ij - (approxPreIntegration->delta_v_ij + approxPreIntegration->d_delta_v_ij_dg*db_g + approxPreIntegration->d_delta_v_ij_da*db_a)).norm() << std::endl;
-	//std::cout << "Error p: " << std::setprecision(15) << (exactPreIntegration->delta_p_ij - (approxPreIntegration->delta_p_ij + approxPreIntegration->d_delta_p_ij_dg*db_g + approxPreIntegration->d_delta_p_ij_da*db_a)).norm() << std::endl;
+	std::cout << "Error R: " << (exactPreIntegration->delta_R_ij * ((approxPreIntegration->delta_R_ij * SO3::exp(approxPreIntegration->d_delta_R_ij_dg * db_g)).inverse())).log().norm() << std::endl;
+	std::cout << "Error v: " << (exactPreIntegration->delta_v_ij - (approxPreIntegration->delta_v_ij + approxPreIntegration->d_delta_v_ij_dg*db_g + approxPreIntegration->d_delta_v_ij_da*db_a)).norm() << std::endl;
+	std::cout << "Error p: " << (exactPreIntegration->delta_p_ij - (approxPreIntegration->delta_p_ij + approxPreIntegration->d_delta_p_ij_dg*db_g + approxPreIntegration->d_delta_p_ij_da*db_a)).norm() << std::endl;
 
 
-	//shared_ptr<inertial::InertialFrameFrameHessian> exactFFH = shared_ptr<inertial::InertialFrameFrameHessian>(new inertial::InertialFrameFrameHessian(approxPreIntegration));
-	//shared_ptr<inertial::InertialFrameFrameHessian> approxFFH = shared_ptr<inertial::InertialFrameFrameHessian>(new inertial::InertialFrameFrameHessian(approxPreIntegration));
+	shared_ptr<inertial::InertialFrameFrameHessian> exactFFH = shared_ptr<inertial::InertialFrameFrameHessian>(new inertial::InertialFrameFrameHessian(approxPreIntegration));
+	shared_ptr<inertial::InertialFrameFrameHessian> approxFFH = shared_ptr<inertial::InertialFrameFrameHessian>(new inertial::InertialFrameFrameHessian(approxPreIntegration));
 
-	//shared_ptr<inertial::InertialFrameHessian> exactFH_from = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
-	//shared_ptr<inertial::InertialFrameHessian> exactFH_to = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
-	//shared_ptr<inertial::InertialFrameHessian> approxFH_from = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
-	//shared_ptr<inertial::InertialFrameHessian> approxFH_to = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
+	shared_ptr<inertial::InertialFrameHessian> exactFH_from = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
+	shared_ptr<inertial::InertialFrameHessian> exactFH_to = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
+	shared_ptr<inertial::InertialFrameHessian> approxFH_from = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
+	shared_ptr<inertial::InertialFrameHessian> approxFH_to = shared_ptr<inertial::InertialFrameHessian>(new inertial::InertialFrameHessian());
 
-	//exactFFH->from = exactFH_from;
-	//exactFH_from->from = exactFFH;
-	//exactFFH->to = exactFH_to;
-	//exactFH_to->to = exactFFH;
+	exactFFH->from = exactFH_from;
+	exactFH_from->from = exactFFH;
+	exactFFH->to = exactFH_to;
+	exactFH_to->to = exactFFH;
 
-	//approxFFH->from = approxFH_from;
-	//approxFH_from->from = approxFFH;
-	//approxFFH->to = approxFH_to;
-	//approxFH_to->to = approxFFH;
+	approxFFH->from = approxFH_from;
+	approxFH_from->from = approxFFH;
+	approxFFH->to = approxFH_to;
+	approxFH_to->to = approxFFH;
 
-	//exactFH_from->fh = shared_ptr<internal::FrameHessian>(new internal::FrameHessian(nullptr, vector<inertial::ImuData>()));
-	//approxFH_from->fh = shared_ptr<internal::FrameHessian>(new internal::FrameHessian(nullptr, vector<inertial::ImuData>()));
+	exactFH_from->fh = shared_ptr<internal::FrameHessian>(new internal::FrameHessian(nullptr, vector<inertial::ImuData>()));
+	approxFH_from->fh = shared_ptr<internal::FrameHessian>(new internal::FrameHessian(nullptr, vector<inertial::ImuData>()));
 
-	//shared_ptr<inertial::InertialHessian> inertialHessian = shared_ptr<inertial::InertialHessian>(new inertial::InertialHessian());
+	shared_ptr<inertial::InertialHessian> inertialHessian = shared_ptr<inertial::InertialHessian>(new inertial::InertialHessian());
 
-	//scale = 1000.0;
+	scale = 1000.0;
 
-	//Vec6 t_bc;
-	//Vec6 t_cd;
+	Vec6 t_bc;
+	Vec6 t_cd;
 
 
-	//for (int i = 0; i < 6; i++)
-	//{
-	//	t_bc[i] = (rand() % 10) / scale;
-	//	t_cd[i] = (rand() % 10) / scale;
-	//}
+	for (int i = 0; i < 6; i++)
+	{
+		t_bc[i] = (rand() % 10) / scale;
+		t_cd[i] = (rand() % 10) / scale;
+	}
 
-	//exactFH_from->fh->worldToCam_evalPT = SE3::exp(t_cd);
-	//approxFH_from->fh->worldToCam_evalPT = exactFH_from->fh->worldToCam_evalPT;
+	exactFH_from->fh->worldToCam_evalPT = SE3::exp(t_cd);
+	approxFH_from->fh->worldToCam_evalPT = exactFH_from->fh->worldToCam_evalPT;
 
-	//inertialHessian->T_BC = SE3::exp(t_bc);
-	//inertialHessian->T_CB = inertialHessian->T_BC.inverse();
-	//inertialHessian->R_DW_evalPT = SO3::exp(Vec3((rand() % 100) / scale, (rand() % 100) / scale, (rand() % 100) / scale));
-	//inertialHessian->R_WD_evalPT = inertialHessian->R_DW_evalPT.inverse();
-	//inertialHessian->scale_evalPT = (rand() % 100) / scale;
+	inertialHessian->T_BC = SE3::exp(t_bc);
+	inertialHessian->T_CB = inertialHessian->T_BC.inverse();
+	inertialHessian->R_DW_evalPT = SO3::exp(Vec3((rand() % 100) / scale, (rand() % 100) / scale, (rand() % 100) / scale));
+	inertialHessian->R_WD_evalPT = inertialHessian->R_DW_evalPT.inverse();
+	inertialHessian->scale_evalPT = (rand() % 100) / scale;
 
-	//scale = 100.0;
-	//exactFH_from->W_v_B_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
-	//exactFH_to->W_v_B_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	scale = 100.0;
+	exactFH_from->W_v_B_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	exactFH_to->W_v_B_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
 
-	//exactFH_from->db_a_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
-	//exactFH_to->db_a_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	exactFH_from->db_a_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	exactFH_to->db_a_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
 
-	//exactFH_from->db_g_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
-	//exactFH_to->db_g_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	exactFH_from->db_g_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
+	exactFH_to->db_g_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
 
-	//Vec6 uw_from;
-	//Vec6 uw_to;
+	Vec6 uw_from;
+	Vec6 uw_to;
 
-	//for (int i = 0; i < 6; i++)
-	//{
-	//	uw_from[i] = (rand() % 10) / scale;
-	//	uw_to[i] = (rand() % 10) / scale;
-	//}
-
-	//exactFH_from->T_WB_EvalPT = SE3::exp(uw_from);
-	//exactFH_to->T_WB_EvalPT = SE3::exp(uw_to);
-
-	//exactFH_from->T_BW_EvalPT = exactFH_from->T_WB_EvalPT.inverse();
-	//exactFH_to->T_BW_EvalPT = exactFH_to->T_WB_EvalPT.inverse();
-
-	////--------------
-	//approxFH_from->W_v_B_EvalPT = exactFH_from->W_v_B_EvalPT;
-	//approxFH_to->W_v_B_EvalPT = exactFH_to->W_v_B_EvalPT;
-
-	//approxFH_from->db_a_EvalPT = exactFH_from->db_a_EvalPT;
-	//approxFH_to->db_a_EvalPT = exactFH_to->db_a_EvalPT;
-
-	//approxFH_from->db_g_EvalPT = exactFH_from->db_g_EvalPT;
-	//approxFH_to->db_g_EvalPT = exactFH_to->db_g_EvalPT;
-
-	//approxFH_from->T_WB_EvalPT = exactFH_from->T_WB_EvalPT;
-	//approxFH_to->T_WB_EvalPT = exactFH_to->T_WB_EvalPT;
-
-	//approxFH_from->T_BW_EvalPT = exactFH_from->T_BW_EvalPT;
-	//approxFH_to->T_BW_EvalPT = exactFH_to->T_BW_EvalPT;
-
-	//Vec15 x_from;
-	//Vec15 dx_from;
-
-	//Vec15 x_to;
-	//Vec15 dx_to;
-
-	//Vec15 x;
-	//Vec15 dx;
-
-	//vector<Mat1515> s;
-
-	//for (int i = 0; i < 15; i++)
-	//{
-	//	scale = 1.0;
-	//	x_from[i] = (rand() % 10) / scale;
-	//	x_to[i] = (rand() % 10) / scale;
-	//	x[i] = (rand() % 10) / scale;
-	//	scale = 100000.0;
-	//	dx_from[i] = (rand() % 10) / scale;
-	//	dx_to[i] = (rand() % 10) / scale;
-	//	dx[i] = (rand() % 10) / scale;
-	//	s.push_back(Mat1515());
-	//	s[i].setZero();
-	//	s[i].block<1, 1>(i, i) = Mat11::Identity();
-	//}
-
-	//Mat1515 select;
-
-	//approxFH_from->setState(x_from);
-	//approxFH_to->setState(x_to);
-	//approxFH_from->fh->setState(x.block<10, 1>(0, 0));
-	//inertialHessian->setState((x).block<4, 1>(10, 0));
-	//approxFH_from->linearize(inertialHessian);
-	//
-
-	////========= dr/du:
-	//select = s[0] + s[1] + s[2];
-
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_to->setState(x_to);
-	//exactFFH->linearize();
-
-	//std::cout << "Error dr/du_i: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm() << std::endl;
-
-	//exactFH_from->setState(x_from);
-	//exactFH_to->setState(x_to + select * dx_to);
-	//exactFFH->linearize();
-	//std::cout << "Error dr/du_j: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm() << std::endl;
-
-	////========= dr/dw:
-	//select = s[3] + s[4] + s[5];
-
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_to->setState(x_to);
-	//exactFFH->linearize();
-
-	//std::cout << "Error dr/dw_i: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm() << std::endl;
-
-	//exactFH_from->setState(x_from);
-	//exactFH_to->setState(x_to + select * dx_to);
-	//exactFFH->linearize();
-	//std::cout << "Error dr/dw_j: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm() << std::endl;
-
-	////========= dr/dv:
-	//select = s[6] + s[7] + s[8];
-
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_to->setState(x_to);
-	//exactFFH->linearize();
-
-	//std::cout << "Error dr/dv_i: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm() << std::endl;
-
-	//exactFH_from->setState(x_from);
-	//exactFH_to->setState(x_to + select * dx_to);
-	//exactFFH->linearize();
-	//std::cout << "Error dr/dv_j: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm() << std::endl;
-
-	////========= dr/dbg:
-	//select = s[9] + s[10] + s[11];
-
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_to->setState(x_to);
-	//exactFFH->linearize();
-
-	//std::cout << "Error dr/dbg_i: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm() << std::endl;
-
-	//exactFH_from->setState(x_from);
-	//exactFH_to->setState(x_to + select * dx_to);
-	//exactFFH->linearize();
-	//std::cout << "Error dr/dbg_j: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm() << std::endl;
-
-	////========= dr/dbg:
-	//select = s[12] + s[13] + s[14];
-
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_to->setState(x_to);
-	//exactFFH->linearize();
-
-	//std::cout << "Error dr/dba_i: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm() << std::endl;
-
-	//exactFH_from->setState(x_from);
-	//exactFH_to->setState(x_to + select * dx_to);
-	//exactFFH->linearize();
-	//std::cout << "Error dr/dba_j: " << std::setprecision(15) << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm() << std::endl;
-
-	////========= dr/dq:
-	//Vec25 delta;
-
-	//select = s[0] + s[1] + s[2];
-	//exactFH_from->setState(x_from);
-	//exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	//inertialHessian->setState((x  + select * dx).block<4, 1>(10, 0));
-	//exactFH_from->linearize(inertialHessian);
-
-	//delta.setZero();
-	//delta.block<3, 1>(0, 0) = SCALE_XI_TRANS * (select * dx).block<3, 1>(0, 0);
-
-	//std::cout << "Error dr/dq: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
-
-	////========= dr/dp:
-	//select = s[3] + s[4] + s[5];
-	//exactFH_from->setState(x_from);
-	//exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	//inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
-	//exactFH_from->linearize(inertialHessian);
-
-	//delta.setZero();
-	//delta.block<3, 1>(3, 0) = SCALE_XI_ROT * (select * dx).block<3, 1>(3, 0);
-
-	//std::cout << "Error dr/dp: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
-
-	////========= dr/ds:
-	//select = s[13];
-	//exactFH_from->setState(x_from);
-	//exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	//inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
-	//exactFH_from->linearize(inertialHessian);
-
-	//delta.setZero();
-	//delta.block<1, 1>(9, 0) = dx.block<1,1>(13,0);
-
-	//std::cout << "Error dr/ds: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
-
-	////========= dr/da:
-	//select = s[10] + s[11] + s[12];
-	//exactFH_from->setState(x_from);
-	//exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
-	//inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
-	//exactFH_from->linearize(inertialHessian);
-
-	//delta.setZero();
-	//delta.block<3, 1>(6, 0) = dx.block<3, 1>(10, 0);
-
-	//std::cout << "Error dr/da: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
-
-	////========= dr/du:
-	//select = s[0] + s[1] + s[2];
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_from->fh->setState((x).block<10, 1>(0, 0));
-	//inertialHessian->setState((x).block<4, 1>(10, 0));
-	//exactFH_from->linearize(inertialHessian);
-
-	//delta.setZero();
-	//delta.block<15, 1>(10, 0) = select * dx_from;
-
-	//std::cout << "Error dr/du: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
-
-
-	////========= dr/dw:
-	//select = s[3] + s[4] + s[5];
-	//exactFH_from->setState(x_from + select * dx_from);
-	//exactFH_from->fh->setState((x).block<10, 1>(0, 0));
-	//inertialHessian->setState((x).block<4, 1>(10, 0));
-	//exactFH_from->linearize(inertialHessian);
-
-	//delta.setZero();
-	//delta.block<15, 1>(10, 0) = select * dx_from;
-
-	//std::cout << "Error dr/dw: " << std::setprecision(15) << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm() << std::endl;
+	for (int i = 0; i < 6; i++)
+	{
+		uw_from[i] = (rand() % 10) / scale;
+		uw_to[i] = (rand() % 10) / scale;
+	}
+
+	exactFH_from->T_WB_EvalPT = SE3::exp(uw_from);
+	exactFH_to->T_WB_EvalPT = SE3::exp(uw_to);
+
+	exactFH_from->T_BW_EvalPT = exactFH_from->T_WB_EvalPT.inverse();
+	exactFH_to->T_BW_EvalPT = exactFH_to->T_WB_EvalPT.inverse();
+
+	//--------------
+	approxFH_from->W_v_B_EvalPT = exactFH_from->W_v_B_EvalPT;
+	approxFH_to->W_v_B_EvalPT = exactFH_to->W_v_B_EvalPT;
+
+	approxFH_from->db_a_EvalPT = exactFH_from->db_a_EvalPT;
+	approxFH_to->db_a_EvalPT = exactFH_to->db_a_EvalPT;
+
+	approxFH_from->db_g_EvalPT = exactFH_from->db_g_EvalPT;
+	approxFH_to->db_g_EvalPT = exactFH_to->db_g_EvalPT;
+
+	approxFH_from->T_WB_EvalPT = exactFH_from->T_WB_EvalPT;
+	approxFH_to->T_WB_EvalPT = exactFH_to->T_WB_EvalPT;
+
+	approxFH_from->T_BW_EvalPT = exactFH_from->T_BW_EvalPT;
+	approxFH_to->T_BW_EvalPT = exactFH_to->T_BW_EvalPT;
+
+	Vec15 x_from;
+	Vec15 dx_from;
+
+	Vec15 x_to;
+	Vec15 dx_to;
+
+	Vec15 x;
+	Vec15 dx;
+
+	vector<Mat1515> s;
+
+	for (int i = 0; i < 15; i++)
+	{
+		scale = 1.0;
+		x_from[i] = (rand() % 10) / scale;
+		x_to[i] = (rand() % 10) / scale;
+		x[i] = (rand() % 10) / scale;
+		scale = 1000000.0;
+		dx_from[i] = (rand() % 10) / scale;
+		dx_to[i] = (rand() % 10) / scale;
+		dx[i] = (rand() % 10) / scale;
+		s.push_back(Mat1515());
+		s[i].setZero();
+		s[i].block<1, 1>(i, i) = Mat11::Identity();
+	}
+
+	Mat1515 select;
+
+	approxFH_from->setState(x_from);
+	approxFH_to->setState(x_to);
+	approxFH_from->fh->setState(x.block<10, 1>(0, 0));
+	inertialHessian->setState((x).block<4, 1>(10, 0));
+	approxFH_from->linearize(inertialHessian);
+	
+
+	//========= dr/du:
+	select = s[0] + s[1] + s[2];
+
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_to->setState(x_to);
+	exactFFH->linearize();
+
+	std::cout << "Error dr/du_i: " << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	exactFH_from->setState(x_from);
+	exactFH_to->setState(x_to + select * dx_to);
+	exactFFH->linearize();
+	std::cout << "Error dr/du_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	//========= dr/dw:
+	select = s[3] + s[4] + s[5];
+
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_to->setState(x_to);
+	exactFFH->linearize();
+
+	std::cout << "Error dr/dw_i: " << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	exactFH_from->setState(x_from);
+	exactFH_to->setState(x_to + select * dx_to);
+	exactFFH->linearize();
+	std::cout << "Error dr/dw_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	//========= dr/dv:
+	select = s[6] + s[7] + s[8];
+
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_to->setState(x_to);
+	exactFFH->linearize();
+
+	std::cout << "Error dr/dv_i: " << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	exactFH_from->setState(x_from);
+	exactFH_to->setState(x_to + select * dx_to);
+	exactFFH->linearize();
+	std::cout << "Error dr/dv_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	//========= dr/dbg:
+	select = s[9] + s[10] + s[11];
+
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_to->setState(x_to);
+	exactFFH->linearize();
+
+	std::cout << "Error dr/dbg_i: " << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	exactFH_from->setState(x_from);
+	exactFH_to->setState(x_to + select * dx_to);
+	exactFFH->linearize();
+	std::cout << "Error dr/dbg_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	//========= dr/dbg:
+	select = s[12] + s[13] + s[14];
+
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_to->setState(x_to);
+	exactFFH->linearize();
+
+	std::cout << "Error dr/dba_i: " << (exactFFH->r - (approxFFH->r + approxFFH->J_from * select * dx_from)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	exactFH_from->setState(x_from);
+	exactFH_to->setState(x_to + select * dx_to);
+	exactFFH->linearize();
+	std::cout << "Error dr/dba_j: " << (exactFFH->r - (approxFFH->r + approxFFH->J_to * select * dx_to)).norm() / exactFFH->r.norm();
+	std::cout << " (" << (exactFFH->r - (approxFFH->r)).norm() / exactFFH->r.norm() << ")" << std::endl;
+
+	//========= dr/dq:
+	Vec25 delta;
+
+	select = s[0] + s[1] + s[2];
+	exactFH_from->setState(x_from);
+	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState((x  + select * dx).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<3, 1>(0, 0) = SCALE_XI_TRANS * (select * dx).block<3, 1>(0, 0);
+
+	std::cout << "Error dr/dq: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
+	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
+
+	//========= dr/dp:
+	select = s[3] + s[4] + s[5];
+	exactFH_from->setState(x_from);
+	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<3, 1>(3, 0) = SCALE_XI_ROT * (select * dx).block<3, 1>(3, 0);
+
+	std::cout << "Error dr/dp: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
+	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
+
+	//========= dr/ds:
+	select = s[13];
+	exactFH_from->setState(x_from);
+	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<1, 1>(9, 0) = dx.block<1,1>(13,0);
+
+	std::cout << "Error dr/ds: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
+	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
+
+	//========= dr/da:
+	select = s[10] + s[11] + s[12];
+	exactFH_from->setState(x_from);
+	exactFH_from->fh->setState((x + select * dx).block<10, 1>(0, 0));
+	inertialHessian->setState((x + select * dx).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<3, 1>(6, 0) = dx.block<3, 1>(10, 0);
+
+	std::cout << "Error dr/da: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
+	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
+
+	//========= dr/du:
+	select = s[0] + s[1] + s[2];
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->fh->setState((x).block<10, 1>(0, 0));
+	inertialHessian->setState((x).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<15, 1>(10, 0) = select * dx_from;
+
+	std::cout << "Error dr/du: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
+	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
+
+
+	//========= dr/dw:
+	select = s[3] + s[4] + s[5];
+	exactFH_from->setState(x_from + select * dx_from);
+	exactFH_from->fh->setState((x).block<10, 1>(0, 0));
+	inertialHessian->setState((x).block<4, 1>(10, 0));
+	exactFH_from->linearize(inertialHessian);
+
+	delta.setZero();
+	delta.block<15, 1>(10, 0) = select * dx_from;
+
+	std::cout << "Error dr/dw: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
+	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
 }
 
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
