@@ -22,6 +22,10 @@ file(GLOB_RECURSE cv_SOURCE_FILES
 	"${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
+IF(MSVC)
+	include(cotire)
+ENDIF()
+
 add_definitions(-DIMAGE_WIDTH=512)
 add_definitions(-DIMAGE_HEIGHT=512)
 
@@ -150,8 +154,9 @@ if (WITH_CAMERA)
 	target_link_libraries(computer-vision ${UEye_LIBRARIES})
 endif ()
 
-IF (WIN32)
+IF (MSVC)
 target_link_libraries(computer-vision)
+cotire(computer-vision)
 else()
 
 target_link_libraries(computer-vision)

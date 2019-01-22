@@ -9,19 +9,19 @@
 
 #ifdef WITH_DSO
 #include "Settings.h"
-#include "frontend/FullSystem.h"
-#include "frontend/Undistort.h"
-#include "frontend/OutputWrapper.h"
+#include <frontend/FullSystem.h>
+#include <frontend/Undistort.h>
+#include <frontend/OutputWrapper.h>
 //#include "frontend/DSOViewer.h"
-#include "NumTypes.h"
+#include <NumTypes.h>
 
 #include "../dsp/IIR.h"
 #include "../io/Settings.h"
 
 #include <Eigen/Dense>
-#include "sophus/se3.hpp"
+#include <sophus/se3.hpp>
 #include <mutex>
-#include "inertial/ImuData.h"
+#include <inertial/ImuData.h>
 
 //#ifdef __linux
 
