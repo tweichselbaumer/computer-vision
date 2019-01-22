@@ -99,9 +99,11 @@ private:
 
 	mutex inertialMutex;
 
+#ifdef VI_TEST_JACOBIAN
 	void runViTests();
 	Vec15 doViTestVec15_2Update(Vec15 x, Vec15 dx);
 	Vec15 doViTestVec15Update(Vec15 x, Vec15 dx);
+#endif //VI_TEST_JACOBIAN
 
 #ifdef __linux
 	std::string calib = "/opt/firefly/camera.txt";

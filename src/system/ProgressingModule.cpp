@@ -46,8 +46,11 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 	T_cam_imu = Sophus::SE3d(m);
 
 	pNewSlamStatusQueue_ = new boost::lockfree::queue<SlamOverallStatus>(5);
-
+#ifdef WITH_DSO
+#ifdef VI_TEST_JACOBIAN
 	runViTests();
+#endif //VI_TEST_JACOBIAN
+#endif //WITH_DSO
 }
 
 void ProgressingModule::reinitialize()
@@ -322,6 +325,7 @@ void  ProgressingModule::doWork()
 
 #ifdef WITH_DSO
 
+#ifdef VI_TEST_JACOBIAN
 Vec15 ProgressingModule::doViTestVec15Update(Vec15 x, Vec15 dx)
 {
 	Vec15 res = x;
@@ -672,6 +676,7 @@ void ProgressingModule::runViTests()
 	std::cout << "Error dr/dw: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
 	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
 }
+#endif //VI_TEST_JACOBIAN
 
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {

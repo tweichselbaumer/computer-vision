@@ -50,7 +50,9 @@ add_definitions(-DLINKUP_BOOST_CRC16)
 add_definitions(-DLINKUP_DEBUG)
 add_definitions(-D_USE_MATH_DEFINES)
 #add_definitions(-DLINKUP_DEBUG_DETAIL)
-
+IF (WITH_DSO)
+#add_definitions(-DVI_TEST_JACOBIAN)
+ENDIF()
 
 if (WITH_EXTERN_TRIGGER)
 	message("--- extern camera trigger")
