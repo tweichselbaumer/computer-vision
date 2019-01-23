@@ -204,7 +204,7 @@ uint8_t* onChessboardCorner(uint8_t* pDataIn, uint32_t nSizeIn, uint32_t* pSizeO
 
 int main(int argc, char* argv[])
 {
-	FLAGS_logtostderr = 0;
+	FLAGS_logtostderr = 1;
 	FLAGS_minloglevel = 0;
 
 #ifdef __linux

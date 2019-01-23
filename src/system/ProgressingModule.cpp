@@ -78,6 +78,20 @@ void ProgressingModule::reinitialize()
 	ldso::setting_enableLoopClosing = false;
 	ldso::setting_debugout_runquiet = true;
 
+	Vec6 sigma_eta;
+	Vec6 sigma_bd;
+	double gn = pSettings_->imu_parameter.gyroscope_noise;
+	double an = pSettings_->imu_parameter.accelerometer_noise;
+	double gw = pSettings_->imu_parameter.gyroscope_walk;
+	double aw = pSettings_->imu_parameter.accelerometer_walk;
+
+	sigma_eta << gn, gn, gn, an, an, an;
+	sigma_bd << gw, gw, gw, aw, aw, aw;
+
+	ldso::inertial::PreIntegration::delta_t = 1 / 200.0;
+	ldso::inertial::PreIntegration::Sigma_eta = 1 / ldso::inertial::PreIntegration::delta_t  * sigma_eta.asDiagonal();
+	ldso::inertial::PreIntegration::Sigma_bd = sigma_bd.asDiagonal();
+
 	undistorter = shared_ptr<ldso::Undistort>(ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile));
 
 	ldso::internal::setGlobalCalib(
@@ -675,7 +689,7 @@ void ProgressingModule::runViTests()
 
 	std::cout << "Error dr/dw: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
 	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
-}
+	}
 #endif //VI_TEST_JACOBIAN
 
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
