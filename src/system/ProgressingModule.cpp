@@ -448,7 +448,7 @@ void ProgressingModule::runViTests()
 	inertialHessian->T_CB = inertialHessian->T_BC.inverse();
 	inertialHessian->R_DW_evalPT = SO3::exp(Vec3((rand() % 100) / scale, (rand() % 100) / scale, (rand() % 100) / scale));
 	inertialHessian->R_WD_evalPT = inertialHessian->R_DW_evalPT.inverse();
-	inertialHessian->scale_evalPT = (rand() % 100) / scale;
+	inertialHessian->scale_EvalPT = (rand() % 100) / scale;
 
 	scale = 100.0;
 	exactFH_from->W_v_B_EvalPT = Vec3((rand() % 10) / scale, (rand() % 10) / scale, (rand() % 10) / scale);
