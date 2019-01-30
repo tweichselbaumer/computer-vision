@@ -4,7 +4,7 @@ project (computer-vision)
 set (CMAKE_CXX_STANDARD 11)
 
 if (MSVC)
-     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj /fp:fast /openmp /Ox")
+     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FR /bigobj /fp:fast /openmp /O2 /arch:SSE")
 endif (MSVC)
 
 IF (MSVC)
