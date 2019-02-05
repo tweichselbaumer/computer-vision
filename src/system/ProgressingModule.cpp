@@ -696,7 +696,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 {
 	for (shared_ptr<Frame> frame : frames)
 	{
-		if (frame->frameHessian && frame->frameHessian->flaggedForMarginalization)
+		if (true || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
 		{
 			SE3 T_c_w = frame->getPose();
 			/*SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
