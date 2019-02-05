@@ -694,20 +694,13 @@ void ProgressingModule::runViTests()
 
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
-	SE3 T_wd_w_temp;
-	{
-		unique_lock<mutex> lck(inertialMutex);
-		T_wd_w = SE3(HInertial->R_DW_PRE, Vec3(0, 0, 0));
-		T_wd_w_temp = T_wd_w;
-	}
-
 	for (shared_ptr<Frame> frame : frames)
 	{
 		if (frame->frameHessian && frame->frameHessian->flaggedForMarginalization)
 		{
-			Sim3 T_c_wd_ = frame->getPoseOpti();
-			SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
-			SE3 T_c_w = T_c_wd * T_wd_w_temp;
+			SE3 T_c_w = frame->getPose();
+			/*SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
+			SE3 T_c_w = T_c_wd * T_wd_w_temp;*/
 
 			Eigen::Vector3d translation = T_c_w.translation();
 			Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
@@ -776,13 +769,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 
 void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
-	SE3 T_c_wd = frame->getPose();
-	SE3 T_c_w;
-
-	{
-		unique_lock<mutex> lck(inertialMutex);
-		T_c_w = T_c_wd * T_wd_w;
-	}
+	SE3 T_c_w = frame->getPose();
 
 	Eigen::Vector3d translation = T_c_w.translation();
 	Eigen::Quaterniond rotation = T_c_w.unit_quaternion();

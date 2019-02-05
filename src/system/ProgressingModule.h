@@ -95,10 +95,6 @@ private:
 
 	ldso::inertial::ImuData convertImu(ImuData imuData);
 
-	Sophus::SE3d T_wd_w;
-
-	mutex inertialMutex;
-
 #ifdef VI_TEST_JACOBIAN
 	void runViTests();
 	Vec15 doViTestVec15_2Update(Vec15 x, Vec15 dx);
