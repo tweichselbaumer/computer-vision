@@ -85,8 +85,8 @@ void ProgressingModule::reinitialize()
 	double gw = pSettings_->imu_parameter.gyroscope_walk;
 	double aw = pSettings_->imu_parameter.accelerometer_walk;
 
-	sigma_eta << gn, gn, gn, an, an, an;
-	sigma_bd << gw, gw, gw, aw, aw, aw;
+	sigma_eta << gn * gn, gn * gn, gn * gn, an * an, an * an, an * an;
+	sigma_bd << gw * gw, gw * gw, gw * gw, aw * aw, aw * aw, aw * aw;
 
 	ldso::inertial::PreIntegration::delta_t = 1 / 200.0;
 	ldso::inertial::PreIntegration::Sigma_eta = 1 / ldso::inertial::PreIntegration::delta_t  * sigma_eta.asDiagonal();
@@ -293,7 +293,7 @@ void  ProgressingModule::doWork()
 
 				hasMotion = mov.norm() > setting_vi_hasMovementThreshold;
 
-				if (fullSystem->initialized || hasMotion)
+				if (fullSystem->initialized || hasMotion )
 				{
 					vector<ldso::inertial::ImuData> imuDataHistory;
 					int queueSize = imuQueue.size();
@@ -689,14 +689,14 @@ void ProgressingModule::runViTests()
 
 	std::cout << "Error dr/dw: " << (exactFH_from->r - (approxFH_from->r + approxFH_from->J * delta)).norm() / exactFH_from->r.norm();
 	std::cout << " (" << (exactFH_from->r - (approxFH_from->r)).norm() / exactFH_from->r.norm() << ")" << std::endl;
-	}
+}
 #endif //VI_TEST_JACOBIAN
 
 void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames, bool final, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
 	for (shared_ptr<Frame> frame : frames)
 	{
-		if (true || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
+		if (false || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
 		{
 			SE3 T_c_w = frame->getPose();
 			/*SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
