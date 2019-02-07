@@ -696,9 +696,9 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 {
 	for (shared_ptr<Frame> frame : frames)
 	{
-		if (false || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
+		if (true || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
 		{
-			SE3 T_c_w = frame->getPose();
+			SE3 T_c_w = frame->getPoseInertial();
 			/*SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
 			SE3 T_c_w = T_c_wd * T_wd_w_temp;*/
 
@@ -769,7 +769,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 
 void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
-	SE3 T_c_w = frame->getPose();
+	SE3 T_c_w = frame->getPoseInertial();
 
 	Eigen::Vector3d translation = T_c_w.translation();
 	Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
