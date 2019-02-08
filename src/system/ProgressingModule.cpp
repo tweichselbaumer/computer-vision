@@ -58,9 +58,9 @@ void ProgressingModule::reinitialize()
 #ifdef WITH_DSO
 	ldso::setting_desiredImmatureDensity = 1500;
 	ldso::setting_desiredPointDensity = 2000;
-	ldso::setting_minFrames = 8;
-	ldso::setting_maxFrames = 10;
-	ldso::setting_maxOptIterations = 6;
+	ldso::setting_minFrames = 5;
+	ldso::setting_maxFrames = 8;
+	ldso::setting_maxOptIterations = 8;
 	ldso::setting_minOptIterations = 1;
 	ldso::setting_logStuff = false;
 	ldso::setting_kfGlobalWeight = 1.3;
@@ -293,7 +293,7 @@ void  ProgressingModule::doWork()
 
 				hasMotion = mov.norm() > setting_vi_hasMovementThreshold;
 
-				if (fullSystem->initialized || hasMotion )
+				if (fullSystem->initialized || hasMotion)
 				{
 					vector<ldso::inertial::ImuData> imuDataHistory;
 					int queueSize = imuQueue.size();
@@ -699,6 +699,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 		if (Settings::static_settings.publish_keyframe_immediat || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
 		{
 			SE3 T_c_w = frame->getPoseInertial();
+			double scale = frame->getScaleInertial();
 			/*SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
 			SE3 T_c_w = T_c_wd * T_wd_w_temp;*/
 
@@ -757,7 +758,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 					}
 					pPoint->u = p->u;
 					pPoint->v = p->v;
-					pPoint->inverseDepth = p->idepth_scaled;
+					pPoint->inverseDepth = p->idepth_scaled/scale;
 					pSlamPublishPackage->points.push_back(pPoint);
 				}
 			}
