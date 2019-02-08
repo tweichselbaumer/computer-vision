@@ -5,6 +5,8 @@ Settings::Settings(string filename)
 	filename_ = filename;
 }
 
+decltype(Settings::static_settings) Settings::static_settings;
+
 void Settings::load()
 {
 	if (boost::filesystem::exists(filename_))

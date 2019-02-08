@@ -43,6 +43,9 @@ public:
 	}imu_filter_paramerter;
 	bool recordRemote;
 	bool reproducibleExecution;
+	struct {
+		bool publish_keyframe_immediat = true;
+	} static static_settings;
 private:
 	string filename_;
 };
