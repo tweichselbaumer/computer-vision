@@ -58,8 +58,8 @@ void ProgressingModule::reinitialize()
 #ifdef WITH_DSO
 	ldso::setting_desiredImmatureDensity = 1500;
 	ldso::setting_desiredPointDensity = 2000;
-	ldso::setting_minFrames = 5;
-	ldso::setting_maxFrames = 8;
+	ldso::setting_minFrames = 4;
+	ldso::setting_maxFrames = 7;
 	ldso::setting_maxOptIterations = 8;
 	ldso::setting_minOptIterations = 1;
 	ldso::setting_logStuff = false;
