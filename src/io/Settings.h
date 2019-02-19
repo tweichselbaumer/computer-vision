@@ -44,7 +44,7 @@ public:
 	bool recordRemote;
 	bool reproducibleExecution;
 	struct {
-		bool publish_keyframe_immediat = true;
+		bool publish_keyframe_immediat = false;
 	} static static_settings;
 private:
 	string filename_;
