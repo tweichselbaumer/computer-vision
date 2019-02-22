@@ -56,11 +56,11 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 void ProgressingModule::reinitialize()
 {
 #ifdef WITH_DSO
-	ldso::setting_desiredImmatureDensity = 800;
-	ldso::setting_desiredPointDensity = 1000;
+	ldso::setting_desiredImmatureDensity = 600;
+	ldso::setting_desiredPointDensity = 800;
 	ldso::setting_minFrames = 4;
 	ldso::setting_maxFrames = 6;
-	ldso::setting_maxOptIterations = 8;
+	ldso::setting_maxOptIterations = 5;
 	ldso::setting_minOptIterations = 1;
 	ldso::setting_logStuff = false;
 	ldso::setting_kfGlobalWeight = 1.3;
