@@ -107,7 +107,7 @@ void ProgressingModule::reinitialize()
 
 	fullSystem->setImuToCamTransformation(T_cam_imu);
 
-	ldso::multiThreading = pSettings_->reproducibleExecution;
+	ldso::multiThreading = !pSettings_->reproducibleExecution;
 
 	viewer->reset();
 	fullSystem->setViewer(viewer);
