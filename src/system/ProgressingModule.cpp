@@ -80,10 +80,10 @@ void ProgressingModule::reinitialize()
 
 	Vec6 sigma_eta;
 	Vec6 sigma_bd;
-	double gn = setting_vi_lambda_white_noise * pSettings_->imu_parameter.gyroscope_noise;
-	double an = setting_vi_lambda_white_noise * pSettings_->imu_parameter.accelerometer_noise;
-	double gw = setting_vi_lambda_random_walk * pSettings_->imu_parameter.gyroscope_walk;
-	double aw = setting_vi_lambda_random_walk * pSettings_->imu_parameter.accelerometer_walk;
+	double gn = setting_vi_lambda_white_noise_gyro * pSettings_->imu_parameter.gyroscope_noise;
+	double an = setting_vi_lambda_white_noise_acc * pSettings_->imu_parameter.accelerometer_noise;
+	double gw = setting_vi_lambda_random_walk_gyro * pSettings_->imu_parameter.gyroscope_walk;
+	double aw = setting_vi_lambda_random_walk_acc * pSettings_->imu_parameter.accelerometer_walk;
 
 	sigma_eta << gn * gn, gn * gn, gn * gn, an * an, an * an, an * an;
 	sigma_bd << gw * gw, gw * gw, gw * gw, aw * aw, aw * aw, aw * aw;
