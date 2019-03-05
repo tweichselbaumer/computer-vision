@@ -56,14 +56,16 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 void ProgressingModule::reinitialize()
 {
 #ifdef WITH_DSO
-	ldso::setting_desiredImmatureDensity = 600;
-	ldso::setting_desiredPointDensity = 800;
-	ldso::setting_minFrames = 4;
-	ldso::setting_maxFrames = 6;
-	ldso::setting_maxOptIterations = 5;
-	ldso::setting_minOptIterations = 1;
-	ldso::setting_logStuff = false;
-	ldso::setting_kfGlobalWeight = 1.3;
+	//ldso::setting_desiredImmatureDensity = 600;
+	//ldso::setting_desiredPointDensity = 800;
+	//ldso::setting_minFrames = 8;
+	//ldso::setting_maxFrames = 15;
+	//ldso::setting_maxOptIterations = 5;
+	//ldso::setting_minOptIterations = 1;
+	//ldso::setting_logStuff = false;
+	//ldso::setting_kfGlobalWeight = 1.3;
+
+	//ldso::setting_margWeightFac = 0.75 * 0.75;
 
 	ldso::setting_pointSelection = 0;
 
@@ -100,7 +102,7 @@ void ProgressingModule::reinitialize()
 		undistorter->getK().cast<float>());
 
 	shared_ptr<ORBVocabulary> voc(new ORBVocabulary());
-	//voc->load(vocFile);
+	//voc->load("orbvoc.dbow3");
 
 	fullSystem = shared_ptr<ldso::FullSystem>(new ldso::FullSystem(voc));
 	fullSystem->linearizeOperation = pSettings_->reproducibleExecution;
