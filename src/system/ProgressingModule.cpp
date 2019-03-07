@@ -56,23 +56,23 @@ ProgressingModule::ProgressingModule(InputModule* pInputModule, OutputModule* pO
 void ProgressingModule::reinitialize()
 {
 #ifdef WITH_DSO
-	//ldso::setting_desiredImmatureDensity = 600;
-	//ldso::setting_desiredPointDensity = 800;
-	//ldso::setting_minFrames = 8;
-	//ldso::setting_maxFrames = 15;
-	//ldso::setting_maxOptIterations = 5;
-	//ldso::setting_minOptIterations = 1;
-	//ldso::setting_logStuff = false;
-	//ldso::setting_kfGlobalWeight = 1.3;
+	ldso::setting_desiredImmatureDensity = 600;
+	ldso::setting_desiredPointDensity = 800;
+	ldso::setting_minFrames = 8;
+	ldso::setting_maxFrames = 15;
+	ldso::setting_maxOptIterations = 5;
+	ldso::setting_minOptIterations = 1;
+	ldso::setting_logStuff = false;
+	ldso::setting_kfGlobalWeight = 1.3;
 
 	//ldso::setting_margWeightFac = 0.75 * 0.75;
 
 	ldso::setting_pointSelection = 0;
-
+	ldso::setting_keyframesPerSecond = 2;
 	/*ldso::benchmarkSetting_width = 256;
 	ldso::benchmarkSetting_height = 256;*/
 
-	setting_reTrackThreshold = 2;
+	//setting_reTrackThreshold = 2;
 
 	ldso::setting_photometricCalibration = 2;
 	/*ldso::setting_affineOptModeA = 0;
