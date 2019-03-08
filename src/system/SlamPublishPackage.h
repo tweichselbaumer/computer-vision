@@ -30,9 +30,7 @@ PACK(SlamStatusUpdate{
 	SlamOperationStatus operationStatus;
 	});
 
-PACK(SlamPublishFrame{
-	uint32_t id;
-	double timestamp;
+PACK(SlamSE3{
 	double tx;
 	double ty;
 	double tz;
@@ -40,7 +38,28 @@ PACK(SlamPublishFrame{
 	double q2;
 	double q3;
 	double q4;
-	double s;
+	});
+
+PACK(SlamBias{
+	double x;
+	double y;
+	double z;
+	});
+
+PACK(SlamVelocity{
+	double x;
+	double y;
+	double z;
+	});
+
+PACK(SlamPublishFrame{
+	uint32_t id;
+	double timestamp;
+	SlamSE3 T_cw;
+	SlamSE3 T_bw;
+	SlamVelocity v;
+	SlamBias bg;
+	SlamBias ba;
 	});
 
 PACK(SlamPublishKeyFrame{

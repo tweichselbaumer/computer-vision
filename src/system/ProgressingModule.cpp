@@ -700,10 +700,20 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 	{
 		if (Settings::static_settings.publish_keyframe_immediat || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
 		{
-			SE3 T_c_w = frame->getPoseInertial();
+			SE3 T_c_w = frame->getTcwInertial();
+			SE3 T_b_w = frame->getTbwInertial();
+
+			Vec3 v = frame->getVelocityInertial();
+			Vec3 bg = frame->getBiasGyroscopeInertial();
+			Vec3 ba = frame->getBiasAccelerometerInertial();
+
+			Eigen::Vector3d tcw = T_c_w.translation();
+			Eigen::Quaterniond Rcw = T_c_w.unit_quaternion();
+
+			Eigen::Vector3d tbw = T_b_w.translation();
+			Eigen::Quaterniond Rbw = T_b_w.unit_quaternion();
+
 			double scale = frame->getScaleInertial();
-			/*SE3 T_c_wd = SE3(T_c_wd_.quaternion(), T_c_wd_.translation());
-			SE3 T_c_w = T_c_wd * T_wd_w_temp;*/
 
 			Eigen::Vector3d translation = T_c_w.translation();
 			Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
@@ -713,16 +723,38 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 
 			pSlamPublishPackage->frame.id = frame->id;
 			pSlamPublishPackage->frame.timestamp = frame->timeStamp;
-			pSlamPublishPackage->frame.tx = translation.x();
-			pSlamPublishPackage->frame.ty = translation.y();
-			pSlamPublishPackage->frame.tz = translation.z();
+			pSlamPublishPackage->frame.id = frame->id;
+			pSlamPublishPackage->frame.timestamp = frame->timeStamp;
 
-			pSlamPublishPackage->frame.q1 = rotation.w();
-			pSlamPublishPackage->frame.q2 = rotation.x();
-			pSlamPublishPackage->frame.q3 = rotation.y();
-			pSlamPublishPackage->frame.q4 = rotation.z();
+			pSlamPublishPackage->frame.T_cw.tx = tcw.x();
+			pSlamPublishPackage->frame.T_cw.ty = tcw.y();
+			pSlamPublishPackage->frame.T_cw.tz = tcw.z();
 
-			pSlamPublishPackage->frame.s = 1;
+			pSlamPublishPackage->frame.T_cw.q1 = Rcw.w();
+			pSlamPublishPackage->frame.T_cw.q2 = Rcw.x();
+			pSlamPublishPackage->frame.T_cw.q3 = Rcw.y();
+			pSlamPublishPackage->frame.T_cw.q4 = Rcw.z();
+
+			pSlamPublishPackage->frame.T_bw.tx = tbw.x();
+			pSlamPublishPackage->frame.T_bw.ty = tbw.y();
+			pSlamPublishPackage->frame.T_bw.tz = tbw.z();
+
+			pSlamPublishPackage->frame.T_bw.q1 = Rbw.w();
+			pSlamPublishPackage->frame.T_bw.q2 = Rbw.x();
+			pSlamPublishPackage->frame.T_bw.q3 = Rbw.y();
+			pSlamPublishPackage->frame.T_bw.q4 = Rbw.z();
+
+			pSlamPublishPackage->frame.v.x = v.x();
+			pSlamPublishPackage->frame.v.y = v.y();
+			pSlamPublishPackage->frame.v.z = v.z();
+
+			pSlamPublishPackage->frame.bg.x = bg.x();
+			pSlamPublishPackage->frame.bg.y = bg.y();
+			pSlamPublishPackage->frame.bg.z = bg.z();
+
+			pSlamPublishPackage->frame.ba.x = ba.x();
+			pSlamPublishPackage->frame.ba.y = ba.y();
+			pSlamPublishPackage->frame.ba.z = ba.z();
 
 			pSlamPublishPackage->pKeyFrame = (SlamPublishKeyFrame*)calloc(1, sizeof(SlamPublishKeyFrame));
 			pSlamPublishPackage->pKeyFrame->id = frame->kfId;
@@ -772,26 +804,54 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 
 void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<CalibHessian> HCalib, shared_ptr<inertial::InertialHessian> HInertial)
 {
-	SE3 T_c_w = frame->getPoseInertial();
+	SE3 T_c_w = frame->getTcwInertial();
+	SE3 T_b_w = frame->getTbwInertial();
 
-	Eigen::Vector3d translation = T_c_w.translation();
-	Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
+	Vec3 v = frame->getVelocityInertial();
+	Vec3 bg = frame->getBiasGyroscopeInertial();
+	Vec3 ba = frame->getBiasAccelerometerInertial();
+
+	Eigen::Vector3d tcw = T_c_w.translation();
+	Eigen::Quaterniond Rcw = T_c_w.unit_quaternion();
+
+	Eigen::Vector3d tbw = T_b_w.translation();
+	Eigen::Quaterniond Rbw = T_b_w.unit_quaternion();
 
 	SlamPublishPackage* pSlamPublishPackage = new SlamPublishPackage();
 	pSlamPublishPackage->publishType = SlamPublishType::SLAM_PUBLISH_FRAME;
 
 	pSlamPublishPackage->frame.id = frame->id;
 	pSlamPublishPackage->frame.timestamp = frame->timeStamp;
-	pSlamPublishPackage->frame.tx = translation.x();
-	pSlamPublishPackage->frame.ty = translation.y();
-	pSlamPublishPackage->frame.tz = translation.z();
 
-	pSlamPublishPackage->frame.q1 = rotation.w();
-	pSlamPublishPackage->frame.q2 = rotation.x();
-	pSlamPublishPackage->frame.q3 = rotation.y();
-	pSlamPublishPackage->frame.q4 = rotation.z();
+	pSlamPublishPackage->frame.T_cw.tx = tcw.x();
+	pSlamPublishPackage->frame.T_cw.ty = tcw.y();
+	pSlamPublishPackage->frame.T_cw.tz = tcw.z();
 
-	pSlamPublishPackage->frame.s = 1;
+	pSlamPublishPackage->frame.T_cw.q1 = Rcw.w();
+	pSlamPublishPackage->frame.T_cw.q2 = Rcw.x();
+	pSlamPublishPackage->frame.T_cw.q3 = Rcw.y();
+	pSlamPublishPackage->frame.T_cw.q4 = Rcw.z();
+
+	pSlamPublishPackage->frame.T_bw.tx = tbw.x();
+	pSlamPublishPackage->frame.T_bw.ty = tbw.y();
+	pSlamPublishPackage->frame.T_bw.tz = tbw.z();
+
+	pSlamPublishPackage->frame.T_bw.q1 = Rbw.w();
+	pSlamPublishPackage->frame.T_bw.q2 = Rbw.x();
+	pSlamPublishPackage->frame.T_bw.q3 = Rbw.y();
+	pSlamPublishPackage->frame.T_bw.q4 = Rbw.z();
+
+	pSlamPublishPackage->frame.v.x = v.x();
+	pSlamPublishPackage->frame.v.y = v.y();
+	pSlamPublishPackage->frame.v.z = v.z();
+
+	pSlamPublishPackage->frame.bg.x = bg.x();
+	pSlamPublishPackage->frame.bg.y = bg.y();
+	pSlamPublishPackage->frame.bg.z = bg.z();
+
+	pSlamPublishPackage->frame.ba.x = ba.x();
+	pSlamPublishPackage->frame.ba.y = ba.y();
+	pSlamPublishPackage->frame.ba.z = ba.z();
 
 	pOutputModule_->writeOut(pSlamPublishPackage);
 }
