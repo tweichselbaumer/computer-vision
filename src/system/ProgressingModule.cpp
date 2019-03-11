@@ -219,7 +219,10 @@ void  ProgressingModule::doWork()
 				currentStatus_ = newStatus;
 
 			if (currentStatus_ == SlamOverallStatus::SLAM_STOP)
+			{
 				currentOperationStatus_ = SlamOperationStatus::SLAM_STOPPED;
+				fullSystem->blockUntilMappingIsFinished();
+			}
 
 			if (currentStatus_ == SlamOverallStatus::SLAM_START || currentStatus_ == SlamOverallStatus::SLAM_RESTART || fullSystem->isLost || ldso::setting_fullResetRequested)
 			{
@@ -698,7 +701,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 {
 	for (shared_ptr<Frame> frame : frames)
 	{
-		if (Settings::static_settings.publish_keyframe_immediat || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
+		if (Settings::static_settings.publish_keyframe_immediat || final || (frame->frameHessian && frame->frameHessian->flaggedForMarginalization))
 		{
 			SE3 T_c_w = frame->getTcwInertial();
 			SE3 T_b_w = frame->getTbwInertial();
@@ -713,7 +716,7 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 			Eigen::Vector3d tbw = T_b_w.translation();
 			Eigen::Quaterniond Rbw = T_b_w.unit_quaternion();
 
-			double scale = frame->getScaleInertial();
+			double scale =frame->getScaleInertial();
 
 			Eigen::Vector3d translation = T_c_w.translation();
 			Eigen::Quaterniond rotation = T_c_w.unit_quaternion();
@@ -762,6 +765,8 @@ void ProgressingModule::publishKeyframes(std::vector<shared_ptr<Frame>> &frames,
 			pSlamPublishPackage->pKeyFrame->cy = HCalib->cyl();
 			pSlamPublishPackage->pKeyFrame->fx = HCalib->fxl();
 			pSlamPublishPackage->pKeyFrame->fy = HCalib->fyl();
+
+			pSlamPublishPackage->frame.scale = exp(HInertial->scale_PRE);
 
 			for (auto feat : frame->features)
 			{
@@ -852,6 +857,8 @@ void ProgressingModule::publishCamPose(shared_ptr<Frame> frame, shared_ptr<Calib
 	pSlamPublishPackage->frame.ba.x = ba.x();
 	pSlamPublishPackage->frame.ba.y = ba.y();
 	pSlamPublishPackage->frame.ba.z = ba.z();
+
+	pSlamPublishPackage->frame.scale = frame->getScaleInertial();
 
 	pOutputModule_->writeOut(pSlamPublishPackage);
 }

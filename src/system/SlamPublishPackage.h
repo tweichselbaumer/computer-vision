@@ -60,6 +60,7 @@ PACK(SlamPublishFrame{
 	SlamVelocity v;
 	SlamBias bg;
 	SlamBias ba;
+	double scale;
 	});
 
 PACK(SlamPublishKeyFrame{
