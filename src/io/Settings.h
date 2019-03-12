@@ -38,8 +38,8 @@ public:
 	struct {
 		double* pA;
 		double* pB;
-		int nA;
-		int nB;
+		int nA=0;
+		int nB=0;
 	}imu_filter_paramerter;
 	bool recordRemote;
 	bool reproducibleExecution;

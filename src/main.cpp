@@ -91,8 +91,8 @@ void loadSettings()
 	linkUpLabelContainer.pTemperatureScaleLabel->setValue(pSettings->imu_parameter.temperature_scale);
 
 	linkUpLabelContainer.pAccelerometerNoiseDensityLabel->setValue(pSettings->imu_parameter.accelerometer_noise);
-	linkUpLabelContainer.pAccelerometerRandomWalkLabel->setValue(pSettings->imu_parameter.gyroscope_noise);
-	linkUpLabelContainer.pGyroscopeNoiseDensityLabel->setValue(pSettings->imu_parameter.accelerometer_walk);
+	linkUpLabelContainer.pAccelerometerRandomWalkLabel->setValue(pSettings->imu_parameter.accelerometer_walk);
+	linkUpLabelContainer.pGyroscopeNoiseDensityLabel->setValue(pSettings->imu_parameter.gyroscope_noise);
 	linkUpLabelContainer.pGyroscopeRandomWalkLabel->setValue(pSettings->imu_parameter.gyroscope_walk);
 
 	linkUpLabelContainer.pImuFilterALabel->setValue((uint8_t*)pSettings->imu_filter_paramerter.pA, pSettings->imu_filter_paramerter.nA * sizeof(double));
@@ -115,8 +115,8 @@ void updateSettings()
 	pSettings->imu_parameter.temperature_offset = linkUpLabelContainer.pTemperatureOffsetLabel->getValue();
 
 	pSettings->imu_parameter.accelerometer_noise = linkUpLabelContainer.pAccelerometerNoiseDensityLabel->getValue();
-	pSettings->imu_parameter.gyroscope_noise = linkUpLabelContainer.pAccelerometerRandomWalkLabel->getValue();
-	pSettings->imu_parameter.accelerometer_walk = linkUpLabelContainer.pGyroscopeNoiseDensityLabel->getValue();
+	pSettings->imu_parameter.accelerometer_walk = linkUpLabelContainer.pAccelerometerRandomWalkLabel->getValue();
+	pSettings->imu_parameter.gyroscope_noise = linkUpLabelContainer.pGyroscopeNoiseDensityLabel->getValue();
 	pSettings->imu_parameter.gyroscope_walk = linkUpLabelContainer.pGyroscopeRandomWalkLabel->getValue();
 
 	uint16_t nSizeA;
@@ -252,8 +252,8 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pImuCalibrationMinvGLabel = new LinkUpPropertyLabel_Binary("calibration_M_inv_gyro", 0, pLinkUpNode);
 	linkUpLabelContainer.pAccelerometerNoiseDensityLabel = new LinkUpPropertyLabel_Double("calibration_acc_noise", pLinkUpNode);
 	linkUpLabelContainer.pAccelerometerRandomWalkLabel = new LinkUpPropertyLabel_Double("calibration_acc_walk", pLinkUpNode);
-	linkUpLabelContainer.pGyroscopeRandomWalkLabel = new LinkUpPropertyLabel_Double("calibration_gyro_noise", pLinkUpNode);
-	linkUpLabelContainer.pGyroscopeNoiseDensityLabel = new LinkUpPropertyLabel_Double("calibration_gyro_walk", pLinkUpNode);
+	linkUpLabelContainer.pGyroscopeRandomWalkLabel = new LinkUpPropertyLabel_Double("calibration_gyro_walk", pLinkUpNode);
+	linkUpLabelContainer.pGyroscopeNoiseDensityLabel = new LinkUpPropertyLabel_Double("calibration_gyro_noise", pLinkUpNode);
 
 	linkUpLabelContainer.pSlamChangeStatusLabel = new LinkUpFunctionLabel("slam_change_status", pLinkUpNode);
 	linkUpLabelContainer.pSlamStatusEvent = new LinkUpEventLabel("slam_status_event", pLinkUpNode);

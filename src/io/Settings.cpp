@@ -161,6 +161,24 @@ void Settings::load()
 						imu_calibration.M_inv_gyro[i * 3 + j] = 1.0;
 		}
 	}
+	else
+	{
+		imu_calibration.M_inv_gyro = (double*)calloc(3 * 3, sizeof(double));
+		imu_calibration.M_inv_acc = (double*)calloc(3 * 3, sizeof(double));
+		imu_calibration.R_acc_imu = (double*)calloc(3 * 3, sizeof(double));
+		imu_calibration.T_cam_imu = (double*)calloc(4 * 4, sizeof(double));
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				if (j == i)
+				{
+					imu_calibration.M_inv_gyro[i * 3 + j] = 1.0;
+					imu_calibration.M_inv_acc[i * 3 + j] = 1.0;
+					imu_calibration.R_acc_imu[i * 3 + j] = 1.0;
+					imu_calibration.T_cam_imu[i * 4 + j] = 1.0;
+				}
+
+		imu_calibration.T_cam_imu[3 * 4 + 3] = 1.0;
+	}
 }
 
 void Settings::save()
