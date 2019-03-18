@@ -58,6 +58,10 @@ void Settings::load()
 			reproducibleExecution = j["reproducible_execution"].get<bool>();
 		}
 
+		if (j["enable_visual_inertial"].is_boolean())
+		{
+			enableVisualInertial = j["enable_visual_inertial"].get<bool>();
+		}
 
 		if (j["imu_filter_paramerter"]["a"].is_array())
 		{
@@ -199,6 +203,7 @@ void Settings::save()
 
 	j["record_remote"] = recordRemote;
 	j["reproducible_execution"] = reproducibleExecution;
+	j["enable_visual_inertial"] = enableVisualInertial;
 
 	for (int i = 0; i < imu_filter_paramerter.nA; i++)
 	{

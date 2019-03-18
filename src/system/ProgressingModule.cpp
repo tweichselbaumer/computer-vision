@@ -112,6 +112,7 @@ void ProgressingModule::reinitialize()
 	fullSystem->setImuToCamTransformation(T_cam_imu);
 
 	ldso::multiThreading = !pSettings_->reproducibleExecution;
+	ldso::setting_vi_enable = pSettings_->enableVisualInertial;
 
 	viewer->reset();
 	fullSystem->setViewer(viewer);

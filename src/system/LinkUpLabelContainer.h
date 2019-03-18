@@ -40,6 +40,8 @@ struct LinkUpLabelContainer
 	LinkUpFunctionLabel* pSlamChangeStatusLabel;
 	LinkUpEventLabel* pSlamStatusEvent;
 	LinkUpPropertyLabel_Boolean* pSlamReproducibleExecutionLabel;
+	LinkUpPropertyLabel_Boolean* pSlamEnableVisualInertialLabel;
+
 
 };
 

@@ -43,6 +43,7 @@ public:
 	}imu_filter_paramerter;
 	bool recordRemote;
 	bool reproducibleExecution;
+	bool enableVisualInertial;
 	struct {
 		bool publish_keyframe_immediat = false;
 	} static static_settings;

@@ -84,6 +84,8 @@ void loadSettings()
 	linkUpLabelContainer.pRecodRemoteLabel->setValue(pSettings->recordRemote);
 
 	linkUpLabelContainer.pSlamReproducibleExecutionLabel->setValue(pSettings->reproducibleExecution);
+	linkUpLabelContainer.pSlamEnableVisualInertialLabel->setValue(pSettings->enableVisualInertial);
+
 
 	linkUpLabelContainer.pAccelerometerScaleLabel->setValue(pSettings->imu_parameter.accelerometer_scale);
 	linkUpLabelContainer.pGyroscopeScaleLabel->setValue(pSettings->imu_parameter.gyroscope_scale);
@@ -108,6 +110,7 @@ void updateSettings()
 {
 	pSettings->recordRemote = linkUpLabelContainer.pRecodRemoteLabel->getValue();
 	pSettings->reproducibleExecution = linkUpLabelContainer.pSlamReproducibleExecutionLabel->getValue();
+	pSettings->enableVisualInertial = linkUpLabelContainer.pSlamEnableVisualInertialLabel->getValue();
 
 	pSettings->imu_parameter.accelerometer_scale = linkUpLabelContainer.pAccelerometerScaleLabel->getValue();
 	pSettings->imu_parameter.gyroscope_scale = linkUpLabelContainer.pGyroscopeScaleLabel->getValue();
@@ -259,6 +262,7 @@ int main(int argc, char* argv[])
 	linkUpLabelContainer.pSlamStatusEvent = new LinkUpEventLabel("slam_status_event", pLinkUpNode);
 
 	linkUpLabelContainer.pSlamReproducibleExecutionLabel = new LinkUpPropertyLabel_Boolean("slam_reproducible_execution", pLinkUpNode);
+	linkUpLabelContainer.pSlamEnableVisualInertialLabel = new LinkUpPropertyLabel_Boolean("slam_enable_visual_inertial", pLinkUpNode);
 
 	loadSettings();
 
