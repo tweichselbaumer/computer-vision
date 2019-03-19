@@ -96,6 +96,10 @@ void ProgressingModule::reinitialize()
 	ldso::inertial::PreIntegration::Sigma_eta = 1 / ldso::inertial::PreIntegration::delta_t  * sigma_eta.asDiagonal();
 	ldso::inertial::PreIntegration::Sigma_bd = sigma_bd.asDiagonal();
 
+	ldso::internal::PointFrameResidual::instanceCounter = 0;
+	ldso::Point::mNextId = 0;
+	ldso::Frame::nextId = 0;
+
 	undistorter = shared_ptr<ldso::Undistort>(ldso::Undistort::getUndistorterForFile(calib, gammaFile, vignetteFile));
 
 	ldso::internal::setGlobalCalib(

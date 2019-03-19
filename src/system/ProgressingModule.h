@@ -15,6 +15,10 @@
 //#include "frontend/DSOViewer.h"
 #include <NumTypes.h>
 
+#include <internal/Residuals.h>
+#include <Point.h>
+#include <Frame.h>
+
 #include "../dsp/IIR.h"
 #include "../io/Settings.h"
 
